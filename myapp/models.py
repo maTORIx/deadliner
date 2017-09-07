@@ -57,8 +57,11 @@ class Project(models.Model):
     description = models.CharField(max_length=255, null=False)
     date_create = models.DateTimeField(auto_now_add=True, null=False)
     date_deadline = models.DateTimeField(null=False)
-    user_id = models.CharField(max_length=255, null=False)
+    org_id = models.IntegerField(null=False)
     completed = models.IntegerField(null=False)
+
+    class Meta:
+        unique_together = ("title", "org_id")
 
 
 class Jobs(models.Model):
@@ -67,9 +70,25 @@ class Jobs(models.Model):
     date_create = models.DateTimeField(auto_now_add=True, null=False)
     date_deadline = models.DateTimeField(null=False)
     project_id = models.IntegerField(null=False)
-    parent_id = models.IntegerField(null=False)
+    parent_id = models.IntegerField(null=True)
     completed = models.IntegerField(null=False)
 
+    class Meta:
+        unique_together = ("title", "parent_id", "project_id")
+
+    def getPath(self):
+        result = [self.title]
+        parent_id = self.parent_id
+        while(True):
+            if(parent_id == null):
+                break
+            parent = Jobs.objects.get(id=parent_id)
+            parent_id = parent.parent_id
+            result.append(parent.title)
+        project = Project.objects.get(id=self.project_id)
+        result.append(project.title)
+        result.append("")
+        return "/".join(result.reverse())
 
 class Images(models.Model):
     user_id = models.IntegerField(null=False)
