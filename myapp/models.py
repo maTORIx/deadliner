@@ -1,5 +1,6 @@
 from django.db import models
 import uuid
+from datetime import datetime
 # Create your models here.
 
 
@@ -46,6 +47,9 @@ class Organization(models.Model):
             organization_id=self.id).values_list("user_id", flat=True)
         return User.objects.filter(id=users_id)
 
+    def getProjects(self):
+        return Project.objects.filter(org_id=id)
+
 
 class Member(models.Model):
     organization_id = models.IntegerField(null=False)
@@ -63,6 +67,11 @@ class Project(models.Model):
     class Meta:
         unique_together = ("title", "org_id")
 
+    def getChildlen(self):
+        return Jobs.objects.filter(project_id=self.id, parent_id=None)
+
+    def getCommits(self):
+        return Commits.objects.filter(org_id=self.org_id, project_id=self.id)
 
 class Jobs(models.Model):
     title = models.CharField(max_length=255, null=False)
@@ -90,6 +99,20 @@ class Jobs(models.Model):
         result.append("")
         return "/".join(result.reverse())
 
+    def getCommits(self):
+        return Commits.objects.filter(parent_id=self.id, project_id=self.project_id)
+    
+    def getChildlen(self):
+        return Jobs.objects.filter(project_id=self.project_id, parent_id=self.id)
+
 class Images(models.Model):
     user_id = models.IntegerField(null=False)
     image = models.ImageField(null=False)
+
+class Commits(models.Model):
+    date_create = models.DateTimeField(default=datetime.now)
+    org_id = models.IntegerField(null=False)
+    project_id = models.IntegerField(null=False)
+    user_id = models.IntegerField(null=False)
+    parent_id = models.IntegerField(null=True)
+    body = models.CharField(max_length=255, null=False)

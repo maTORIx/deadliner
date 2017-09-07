@@ -1,6 +1,33 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-  
-  <h2>{{ message }}</h2>
+<div class="container">
+  <div class="row">
+    <div class="col col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h6>Organization   <a href="/org/new" class="float-right"><button type="button" class="btn btn-sm btn-primary">New</button></a></h6>
+        </div>
+        <div class="card-block">
+          <h4 class="card-title">Your organizations</h4>
+          <div class="card">
+            {% for org in orgs %}
+              <div class="card-block">
+                <h6 class=card-title>{{org.title}}</h6>
+                <div class="card-text">{{org.description}}</div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col col-md-8">
+      <div class="card">
+        {% for commit in commits %}
+          <div class="card-text">{{commit.date}} {{commit.path}} : {{commit.body}}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
