@@ -2,25 +2,25 @@
 
 {% block content %}
 <nav class="navbar navbar-inverse bg-inverse">
-  <h1 class="navbar-brand mb-0">{{org.name}}  /</h1>
+  <h1 class="navbar-brand mb-0">{{org.name}}  /{{project.title}}</h1>
 </nav>
 <div class="container">
   <div class="row">
     <div class="col-md-4">
       <div class="card">
         <div class="card-header">
-          <h6>Projects   <div class="float-right">
+          <h6>Jobs   <div class="float-right">
             <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#exampleModalLong">New</button></div></h6>
         </div>
         <div class="card-block">
-        {% for project in projects %}
+        {% for job in jobs %}
           <div class="card">
             <div class="card-header">
-              <a href="/org/{{org.name}}/{{project.title}}"><h6 class=card-title>{{project.title}} </h6></a>
-              <div>Until {{project.date_deadline.year}}/{{project.date_deadline.month}}/{{project.date_deadline.day}} {{project.date_deadline.hour}} o'clock</div>
+              <a href="/org/{{org.name}}/{{project.title}}"><h6 class=card-title>{{job.title}} </h6></a>
+              <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}} {{job.date_deadline.hour}} o'clock</div>
             </div>
             <div class="card-block">
-              <div class="card-text">{{project.description}}</div>
+              <div class="card-text">{{job.description}}</div>
             </div>
           </div>
         {% endfor %}
@@ -53,7 +53,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLongTitle">New Project</h5>
+        <h5 class="modal-title" id="exampleModalLongTitle">New Job</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -62,8 +62,8 @@
         <form method="post" action="">
           {% csrf_token %}
           <div class="form-group">
-            <label for="name">Name(alphabet )</label>
-            <input type="text" pattern="[A-Za-z0-9\.\*\+\?\-\[\]\(\)~\^\$\{\}\\!'%&=¥<>_:;]+" name="name" maxlength="30" class="form-control" id="name" placeholder="Enter project name" required>
+            <label for="name">Name(alphabet, - , _ and +. not use space)</label>
+            <input type="text" pattern="[A-Za-z0-9\.\*\+\?\-\[\]\(\)~\^\$\{\}\\!'%&=¥<>_:;]+" name="name" maxlength="30" class="form-control" id="name" placeholder="Enter Job name" required>
           </div>
           <div class="form-group">
             <label for="description">Description</label>
@@ -74,7 +74,7 @@
             <input type="datetime-local" name="deadline" class="form-control" id="deadline" placeholder="Enter project name" required>
           </div>
           <div class="form-froup">
-            <button type="submit" class="btn btn-primary btn-block">Create new project</button>
+            <button type="submit" class="btn btn-primary btn-block">Create new Job</button>
           </div>
         </form>
       </div>

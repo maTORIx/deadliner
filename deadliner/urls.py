@@ -25,5 +25,6 @@ urlpatterns = [
     url(r'^signup/?$', views.Signup.as_view()),
     url(r'^logout/?$', views.logout),
     url(r'^org/?$', views.OrgForm.as_view()),
-    url(r'^org/(?P<org>[A-Za-z0-9\-_\?@\\\#&$\.\(\)\[\]]+)/?$', views.Org.as_view()),
+    url(r'^org/(?P<org>[A-Za-z0-9\.\*\+\?\-\[\]\(\)~\^\$\{\}\\!\'%&=¥<>_:;]+)/?$', views.ViewOrg.as_view()),
+    url(r'^org/(?P<org>[A-Za-z0-9\.\*\+\?\-\[\]\(\)~\^\$\{\}\\!\'%&=¥<>_:;]+)/(?P<proj>[A-Za-z0-9\.\*\+\?\-\[\]\(\)~\^\$\{\}\\!\'%&=¥<>_:;]+)/?$', views.ViewProject.as_view()),
 ]

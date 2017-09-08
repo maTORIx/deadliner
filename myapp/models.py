@@ -51,7 +51,10 @@ class Organization(models.Model):
         return User.objects.filter(id=users_id)
 
     def getProjects(self):
-        return Project.objects.filter(org_id=id)
+        return Project.objects.filter(org_id=self.id)
+
+    def getCommits(self):
+        return Commits.objects.filter(org_id=self.id)
 
 
 class Member(models.Model):
@@ -71,12 +74,12 @@ class Project(models.Model):
         unique_together = ("title", "org_id")
 
     def getChildlen(self):
-        return Jobs.objects.filter(project_id=self.id, parent_id=None)
+        return Job.objects.filter(project_id=self.id, parent_id=None)
 
     def getCommits(self):
         return Commits.objects.filter(org_id=self.org_id, project_id=self.id)
 
-class Jobs(models.Model):
+class Job(models.Model):
     title = models.CharField(max_length=255, null=False)
     description = models.CharField(max_length=255, null=False)
     date_create = models.DateTimeField(auto_now_add=True, null=False)
