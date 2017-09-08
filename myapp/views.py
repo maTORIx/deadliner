@@ -20,10 +20,12 @@ class Home(TemplateView):
         return super(Home,self).get(request, **kwargs)
 
     def get_context_data(self, **kwargs):
+        user = User.objects.get(id=self.request.session["user_id"])
+        orgs = user.getOrganization()
         context = super(Home, self).get_context_data(**kwargs)
         context["message"] = "message"
+        context["orgs"] = orgs
         return context
-
 
 class Login(TemplateView):
     template_name = "login.html"
@@ -123,5 +125,14 @@ class OrgForm(TemplateView):
             return redirect('/org/?err=This organization name already exists')
         newOrg = Organization(name=name, author=user.id, color=secrets.token_hex(3), link_img=img, link_homepage=homepage)
         newOrg.save()
-        newMember(organization_id=newOrg.id, user_id=user.id)
+        newMember = Member(organization_id=newOrg.id, user_id=user.id)
+        newMember.save()
         return redirect("/")
+
+class Org(TemplateView):
+    template_name = "organization.html"
+    def get(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        print(self.kwargs["org"])
+        return super(Org,self).get(request, *args, **kwargs)

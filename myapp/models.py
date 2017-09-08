@@ -42,8 +42,8 @@ class Organization(models.Model):
     name = models.CharField(max_length=255, unique=True, null=False)
     author = models.IntegerField(null=False)
     color = models.CharField(max_length=255, unique=True, null=False)
-    link_img = models.CharField(max_length=255, unique=True)
-    link_homepage = models.CharField(max_length=255, unique=True)
+    link_img = models.CharField(max_length=255)
+    link_homepage = models.CharField(max_length=255)
 
     def getUsers(self):
         users_id = Member.objects.filter(
