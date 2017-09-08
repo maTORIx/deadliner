@@ -15,7 +15,7 @@ class Home(TemplateView):
     """home page"""
     template_name = "home.html"
     def get(self, request, *args, **kwargs):
-        if not (self.request.COOKIES.get("user_session")):
+        if not (request.session["user_id"]):
             return redirect("/login")
         return super(Home,self).get(request, **kwargs)
 
@@ -92,6 +92,36 @@ class Signup(TemplateView):
         return redirect("/login")
 
 def logout(request):
-    resp = redirect("/")
+    resp = redirect("/login")
     resp.delete_cookie("user_session")
     return resp
+
+class OrgForm(TemplateView):
+    template_name = "orgform.html"
+
+    def get(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        return super(OrgForm,self).get(request, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(OrgForm, self).get_context_data(**kwargs)
+        message = self.request.GET.get("err")
+        context["message"] = message
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        name = request.POST.get("name")
+        img = request.POST.get("img")
+        homepage = request.POST.get("homepage")
+        print(name, img, homepage)
+
+        user = User.objects.get(id=request.session["user_id"])
+        if len(Organization.objects.filter(name=name)):
+            return redirect('/org/?err=This organization name already exists')
+        newOrg = Organization(name=name, author=user.id, color=secrets.token_hex(3), link_img=img, link_homepage=homepage)
+        newOrg.save()
+        newMember(organization_id=newOrg.id, user_id=user.id)
+        return redirect("/")

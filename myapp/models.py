@@ -32,7 +32,10 @@ class UUID(models.Model):
     user_id = models.IntegerField(null=False)
 
     def getUser(self):
-        return User.objects.get(id=self.user_id)
+        users = User.objects.filter(id=self.user_id)
+        if not(len(users)):
+            return None
+        return users[0]
 
 
 class Organization(models.Model):

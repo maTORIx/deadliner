@@ -24,4 +24,5 @@ urlpatterns = [
     url(r'^login/?$', views.Login.as_view()),
     url(r'^signup/?$', views.Signup.as_view()),
     url(r'^logout/?$', views.logout),
+    url(r'^org/?$', views.OrgForm.as_view()),
 ]
