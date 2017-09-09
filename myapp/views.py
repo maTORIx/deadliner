@@ -207,6 +207,7 @@ class ViewProject(TemplateView):
         context["jobs"] = project.getChildlen()
         context["commits"] = project.getCommits()
         context["deadlines"] = project.getDeadlines()
+        context["project_deadline"] = project.date_deadline.strftime("%Y-%m-%d")
         return context
     
     def post(self, request, *args, **kwargs):
@@ -265,7 +266,7 @@ class ViewJob(TemplateView):
         parent_id = None
         jobs = None
         for data in self.kwargs["job"].split("/"):
-            jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id)
+            jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id,title=data)
             if not(len(jobs)):
                 return redirect("/")
             parent_id = jobs[0].id
@@ -276,43 +277,42 @@ class ViewJob(TemplateView):
         context["org"] = org
         context["project"] = project
         context["job"] = job
+        context["jobs"] = job.getChildlen()
         context["children"] = job.getChildlen()
         context["commits"] = job.getCommits()
         context["deadlines"] = job.getDeadlines()
         context["job_url"] = self.kwargs["job"]
+        context["job_deadline"] = job.date_deadline.strftime("%Y-%m-%d")
         return context
     
     def post(self, request, *args, **kwargs):
-        if not (request.session["user_id"]):
-            return redirect("/login")
         orgs = Organization.objects.filter(name=self.kwargs["org"])
+        org = orgs[0]
         projects = Project.objects.filter(title=self.kwargs["proj"])
+        project = projects[0]
 
         # jobGetter
         parent_id = None
         jobs = None
         for data in self.kwargs["job"].split("/"):
-            jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id)
+            jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id,title=data)
             if not(len(jobs)):
                 return redirect("/")
             parent_id = jobs[0].id
         job = jobs[0]
 
-        if not(len(orgs)) or not(len(projects)):
-            return redirect("/")
-        org = orgs[0]
-        project = projects[0]
         title = self.request.POST.get("name")
         description = self.request.POST.get("description")
         date_deadline = self.request.POST.get("deadline")
-        newJob = Job(title=title, description=description, date_deadline=date_deadline, project_id=project.id, parent_id=None, completed=False)
-        try:
-            newJob.save()
-        except IntegrityError:
-            return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] +"/?err=project name already exists")
-        except :
-            return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + "/?err=Invalid form data")
-        return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + "/" + title)
+        newJob = Job(title=title, description=description, date_deadline=date_deadline, project_id=project.id, parent_id=job.id, completed=False)
+        # try:
+        newJob.save()
+        # except IntegrityError:
+        #     return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + self.kwargs["job"] +"/?err=project name already exists")
+        # except :
+        #     return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + self.kwargs["job"] + "/?err=Invalid form data")
+        return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + self.kwargs["job"] + "/" + title)
+        # return redirect("/org")
 
 class ViewCommit(TemplateView):
     def get(self, request, *args, **kwargs):
@@ -362,7 +362,7 @@ class ViewCommit(TemplateView):
             parent_id = None
             jobs = None
             for data in path_ary[2:]:
-                jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id)
+                jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id,title=data)
                 if not(len(jobs)):
                     return redirect("org/" + path + "/?err=Job not found")
                 parent_id = jobs[0].id

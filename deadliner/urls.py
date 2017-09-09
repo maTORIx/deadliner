@@ -27,6 +27,6 @@ urlpatterns = [
     url(r'^org/?$', views.OrgForm.as_view()),
     url(r'^org/(?P<org>[A-Za-z0-9\-\+\_]+)/?$', views.ViewOrg.as_view()),
     url(r'^org/(?P<org>[A-Za-z0-9\-\+\_]+)/(?P<proj>[A-Za-z0-9\-\+\_]+)/?$', views.ViewProject.as_view()),
-    url(r'^org/(?P<org>[A-Za-z0-9\-\+\_]+)/(?P<proj>[A-Za-z0-9\-\+\_]+)/(?P<job>[A-Za-z0-9\-\+\_]+)/?$', views.ViewJob.as_view()),
+    url(r'^org/(?P<org>[A-Za-z0-9\-\+\_]+)/(?P<proj>[A-Za-z0-9\-\+\_]+)/(?P<job>[A-Za-z0-9\-\+\_/]+)/?$', views.ViewJob.as_view()),
     url(r'^commit/?', views.ViewCommit.as_view())
 ]

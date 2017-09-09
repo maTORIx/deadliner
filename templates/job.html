@@ -1,12 +1,14 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<nav class="navbar navbar-inverse bg-inverse">
-  <div class="navbar-brand mb-0"><b>{{org.name}}</b>:/  /{{project.title}}/{{job_url}}</div>
-</nav>
+<div class="table-responsive">
+  <nav class="navbar navbar-inverse bg-inverse">
+    <div class="navbar-brand mb-0"><a href="/org/{{org.name}}"><b>{{org.name}}</b></a>:/  /<a href="/org/{{org.name}}/{{project.title}}">{{project.title}}</a>/{{job_url}}</div>
+  </nav>
+</div>
 <div class="container">
   <div class="row">
-    <div class="col-md-4">
+    <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
           <h6>Jobs   <div class="float-right">
@@ -16,7 +18,7 @@
         {% for job in jobs %}
           <div class="card">
             <div class="card-header">
-              <a href="/org/{{org.name}}/{{project.title}}"><h6 class=card-title>{{job.title}} </h6></a>
+              <a href="/org/{{org.name}}/{{project.title}}/{{job_url}}/{{job.title}}"><h6 class=card-title>{{job.title}} </h6></a>
               <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}} {{job.date_deadline.hour}} o'clock</div>
             </div>
             <div class="card-block">
@@ -27,7 +29,7 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
           <h6>Deadlines</h6>
@@ -37,7 +39,7 @@
         {% endfor %}
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
           <h6>Commits
@@ -103,7 +105,7 @@
           </div>
           <div class="form-group">
             <label for="url">To</label>
-            <input type="text" name="url" maxlength=255"" class="form-control" id="body" value="{{org.name}}/{{project.title}}" required/>
+            <input type="text" name="url" maxlength=255"" class="form-control" id="body" value="{{org.name}}/{{project.title}}/{{job_url}}" required/>
           </div>
           <div class="form-froup">
             <button type="submit" class="btn btn-primary btn-block">Send Commit</button>

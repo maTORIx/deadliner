@@ -58,13 +58,16 @@ class Organization(models.Model):
 
     def getDeadlines(self):
         projects = self.getProjects()
-        def forMap(project):
+        def forMap(data):
             deadline = {
-                "path" : self.name + ":/ /" + project.title,
+                "path" : "/" + data.title,
                 "deadline": project.date_deadline
             }
-            return deadline
-        return map(forMap, projects)
+            return data
+        deadlines = []
+        for project in projects:
+            deadlines.extend(project.getDeadlines())
+        return deadlines
 
 
 class Member(models.Model):
@@ -90,14 +93,12 @@ class Project(models.Model):
         return Commit.objects.filter(org_id=self.org_id, project_id=self.id)
 
     def getDeadlines(self):
-        jobs = self.getChildlen()
-        def forMap(job):
-            deadline = {
-                "path": job.getPath(),
-                "deadline": job.date_deadline
-            }
-            return deadline
-        return map(forMap, jobs)
+        jobs = Job.objects.filter(project_id=self.id)
+        deadlines = []
+        for job in jobs:
+            deadlines.append({"path": job.getPath(), "deadline": job.date_deadline})
+        deadlines.append({"path": "/" + self.title, "deadline": self.date_deadline})
+        return deadlines
 
 class Job(models.Model):
     title = models.CharField(max_length=255, null=False)
@@ -117,7 +118,7 @@ class Job(models.Model):
         while(True):
             if(parent_id == None):
                 break
-            parent = Jobs.objects.get(id=parent_id)
+            parent = Job.objects.get(id=parent_id)
             parent_id = parent.parent_id
             result.append(parent.title)
         project = Project.objects.get(id=self.project_id)
@@ -127,20 +128,27 @@ class Job(models.Model):
         return "/".join(result[::-1])
 
     def getCommits(self):
-        return Commit.objects.filter(parent_id=self.id, project_id=self.project_id)
+        commits = []
+        children = self.getChildlen()
+        for child in children:
+            tmp_commits = child.getCommits()
+            for commit in tmp_commits:
+                commits.append(commit)
+        commits.extend(Commit.objects.filter(parent_id=self.id))
+        return commits
     
     def getChildlen(self):
         return Job.objects.filter(project_id=self.project_id, parent_id=self.id)
     
     def getDeadlines(self):
         jobs = self.getChildlen()
-        def forMap(job):
-            deadline = {
-                "path": job.getPath(),
-                "deadline": job.date_deadline
-            }
-            return deadline
-        return map(forMap, jobs)
+        deadlines = []
+        for job in jobs:
+            tmp_deadlines = job.getDeadlines()
+            for deadline in tmp_deadlines:
+                deadlines.append(deadline)
+        deadlines.append({"deadline": self.date_deadline, "path": self.getPath()})
+        return deadlines
 
 class Image(models.Model):
     user_id = models.IntegerField(null=False)
@@ -153,3 +161,4 @@ class Commit(models.Model):
     user_id = models.IntegerField(null=False)
     parent_id = models.IntegerField(null=True)
     body = models.CharField(max_length=255, null=False)
+    path = models.CharField(max_length=255, null=False)

@@ -2,11 +2,11 @@
 
 {% block content %}
 <nav class="navbar navbar-inverse bg-inverse">
-  <div class="navbar-brand mb-0"><b>{{org.name}}</b>:/  /{{project.title}}</div>
+  <div class="navbar-brand mb-0"><a href="/org/{{org.name}}"><b>{{org.name}}</b></a>:/  /{{project.title}}</div>
 </nav>
 <div class="container">
   <div class="row">
-    <div class="col-md-4">
+    <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
           <h6>Jobs   <div class="float-right">
@@ -16,7 +16,7 @@
         {% for job in jobs %}
           <div class="card">
             <div class="card-header">
-              <a href="/org/{{org.name}}/{{project.title}}"><h6 class=card-title>{{job.title}} </h6></a>
+              <a href="/org/{{org.name}}/{{project.title}}/{{job.title}}"><h6 class=card-title>{{job.title}} </h6></a>
               <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}} {{job.date_deadline.hour}} o'clock</div>
             </div>
             <div class="card-block">
@@ -27,7 +27,7 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
           <h6>Deadlines</h6>
@@ -37,7 +37,7 @@
         {% endfor %}
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
           <h6>Commits
@@ -71,9 +71,10 @@
             <textarea type="text" name="description" maxlength=255"" class="form-control" id="description" placeholder="Enter description" required></textarea>
           </div>
           <div class="form-group">
-            <label for="deadline">Deadline</label>
-            <input type="datetime-local" name="deadline" class="form-control" id="deadline" placeholder="Enter project name" required>
+            <label for="deadline">Deadline(until {{project_deadline}})</label>
+            <input type="date" name="deadline" max="{{project_deadline}}" class="form-control">
           </div>
+          
           <div class="form-froup">
             <button type="submit" class="btn btn-primary btn-block">Create new Job</button>
           </div>
