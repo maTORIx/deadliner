@@ -30,20 +30,21 @@
     <div class="col-md-4">
       <div class="card">
         <div class="card-header">
-          <h6>Recent Deadlines</h6>
+          <h6>Deadlines</h6>
         </div>
         {% for deadline in deadlines %}
-          <div class="card-text">{{deadline.date}} : {{deadline.path}}</div>
+          <div class="card-text">{{deadline.deadline.year}}/{{deadline.deadline.month}}/{{deadline.deadline.day}} : {{deadline.path}}</div>
         {% endfor %}
       </div>
     </div>
     <div class="col-md-4">
       <div class="card">
         <div class="card-header">
-          <h6>Recent Commits</h6>
+          <h6>Commits
+          <div class="float-right"><button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#CommitModal">New</button></div></h6>
         </div>
         {% for commit in commits %}
-          <div class="card-text">{{commit.date}} {{commit.path}} : {{commit.body}}</div>
+          <div class="card-text">{{commit.date_create.year}}/{{commit.date_create.month}}/{{commit.date_create.day}} {{commit.path}} : {{commit.body}}</div>
         {% endfor %}
       </div>
     </div>
@@ -63,7 +64,7 @@
           {% csrf_token %}
           <div class="form-group">
             <label for="name">Name(alphabet )</label>
-            <input type="text" pattern="[A-Za-z0-9\.\*\+\?\-\[\]\(\)~\^\$\{\}\\!'%&=¥<>_:;]+" name="name" maxlength="30" class="form-control" id="name" placeholder="Enter project name" required>
+            <input type="text" pattern="[A-Za-z0-9\-\+\_]+" name="name" maxlength="30" class="form-control" id="name" placeholder="Enter project name" required>
           </div>
           <div class="form-group">
             <label for="description">Description</label>
@@ -75,6 +76,37 @@
           </div>
           <div class="form-froup">
             <button type="submit" class="btn btn-primary btn-block">Create new project</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="CommitModal" tabindex="-1" role="dialog" aria-labelledby="CommitModalTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="CommitModalTitle">New Job</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="/commit">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="body">Body</label>
+            <textarea type="text" name="body" maxlength=255"" class="form-control" id="body" placeholder="Enter text" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="url">To</label>
+            <input type="text" name="url" maxlength=255"" class="form-control" id="body" value="{{org.name}}" required/>
+          </div>
+          <div class="form-froup">
+            <button type="submit" class="btn btn-primary btn-block">Send Commit</button>
           </div>
         </form>
       </div>
