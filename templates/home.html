@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
   <div class="row">
-    <div class="col-md-4">
+    <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
           <h6>Organizations   <a href="/org" class="float-right"><button type="button" class="btn btn-sm btn-primary">New</button></a></h6>
@@ -12,25 +12,25 @@
         {% for org in orgs %}
           <div class="card">
             <div class="card-header">
-              <h6 class=card-title>{{org.name}}</h6>
-            </div>
-            <div class="card-block">
-              <div class="card-text">{{org.author}}</div>
+              <img src="{{org.link_img}}" width="70" align="left" style="margin-right: 10px;">
+              <a href="/org/{{org.name}}" ><h6 class=card-title>{{org.name}}</h6></a>
+              <div>homepage: <a href="{{org.link_homepage}}">{{org.link_homepage}}</a></div>
             </div>
           </div>
         {% endfor %}
         </div>
       </div>
     </div>
-    <div class="col-md-8">
+    <div class="col-lg-8">
       <div class="card">
         <div class="card-header">
-          <h6>Recent Commits</h6>
+          <h6>Recent My Commits</h6>
         </div>
         {% for commit in commits %}
           <div class="card-text">{{commit.date}} {{commit.path}} : {{commit.body}}</div>
         {% endfor %}
       </div>
+    </div>
     </div>
   </div>
 </div>

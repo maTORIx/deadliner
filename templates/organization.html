@@ -1,10 +1,20 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<nav class="navbar navbar-inverse bg-inverse">
-  <h1 class="navbar-brand mb-0">{{org.name}}  /</h1>
+<nav class="navbar navbar-inverse" style="background-color: #{{org.color}}">
+  <div class="navbar-brand" style="color: #000000;"><a href="/org/{{org.name}}"><b>{{org.name}}</b></a>:/  /{{project.title}}</div>
 </nav>
 <div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>{{org.name}}</h5>
+          <div>homepage <a href="{{org.link_homepage}}">{{org.link_homepage}}</a><button type="button" class="btn btn-success btn-sm float-right" align="right">Settings</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="row">
     <div class="col-lg-4">
       <div class="card">
@@ -17,7 +27,7 @@
           <div class="card">
             <div class="card-header">
               <a href="/org/{{org.name}}/{{project.title}}"><h6 class=card-title>{{project.title}} </h6></a>
-              <div>Until {{project.date_deadline.year}}/{{project.date_deadline.month}}/{{project.date_deadline.day}} {{project.date_deadline.hour}} o'clock</div>
+              <div>Until {{project.date_deadline.year}}/{{project.date_deadline.month}}/{{project.date_deadline.day}}</div>
             </div>
             <div class="card-block">
               <div class="card-text">{{project.description}}</div>
@@ -72,7 +82,7 @@
           </div>
           <div class="form-group">
             <label for="deadline">Deadline</label>
-            <input type="datetime-local" name="deadline" class="form-control" id="deadline" placeholder="Enter project name" required>
+            <input type="date" name="deadline" class="form-control" id="deadline" placeholder="Enter project name" required>
           </div>
           <div class="form-froup">
             <button type="submit" class="btn btn-primary btn-block">Create new project</button>

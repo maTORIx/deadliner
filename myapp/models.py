@@ -22,6 +22,9 @@ class User(models.Model):
         newUUID = UUID(user_id=self.id)
         newUUID.save()
         return newUUID
+    
+    def getCommits(self):
+        return Commit.objects.filter(user_id=self.id)
 
 
 class UUID(models.Model):

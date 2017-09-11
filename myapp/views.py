@@ -23,9 +23,11 @@ class Home(TemplateView):
     def get_context_data(self, **kwargs):
         user = User.objects.get(id=self.request.session["user_id"])
         orgs = user.getOrganization()
+        commits = user.getCommits()
         context = super(Home, self).get_context_data(**kwargs)
         context["message"] = "message"
         context["orgs"] = orgs
+        context["commits"] = commits
         return context
 
 class Login(TemplateView):
@@ -229,7 +231,7 @@ class ViewProject(TemplateView):
             return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] +"/?err=project name already exists")
         except :
             return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + "/?err=Invalid form data")
-        return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + "/" + title)
+        return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"])
     
 class ViewJob(TemplateView):
     template_name = "job.html"
@@ -305,14 +307,13 @@ class ViewJob(TemplateView):
         description = self.request.POST.get("description")
         date_deadline = self.request.POST.get("deadline")
         newJob = Job(title=title, description=description, date_deadline=date_deadline, project_id=project.id, parent_id=job.id, completed=False)
-        # try:
-        newJob.save()
-        # except IntegrityError:
-        #     return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + self.kwargs["job"] +"/?err=project name already exists")
-        # except :
-        #     return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + self.kwargs["job"] + "/?err=Invalid form data")
-        return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + self.kwargs["job"] + "/" + title)
-        # return redirect("/org")
+        try:
+            newJob.save()
+        except IntegrityError:
+            return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + self.kwargs["job"] +"/?err=project name already exists")
+        except :
+            return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + self.kwargs["job"] + "/?err=Invalid form data")
+        return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + "/" + self.kwargs["job"])
 
 class ViewCommit(TemplateView):
     def get(self, request, *args, **kwargs):
@@ -330,7 +331,7 @@ class ViewCommit(TemplateView):
             if not(len(orgs)):
                 return redirect("org/" + path + "/?err=organization not found")
             org = orgs[0]
-            newCommit = Commit(org_id=org.id, project_id=None, user_id=request.session["user_id"], parent_id=None, body=body)
+            newCommit = Commit(org_id=org.id, project_id=None, user_id=request.session["user_id"], parent_id=None, body=body, path = path)
             try:
                 newCommit.save()
             except:
@@ -344,7 +345,7 @@ class ViewCommit(TemplateView):
             if not(len(projects)):
                 return redirect("org/" + path + "/?err=Project not found")
             project = projects[0]
-            newCommit = Commit(org_id=org.id, project_id=project.id, user_id=request.session["user_id"], parent_id=None, body=body)
+            newCommit = Commit(org_id=org.id, project_id=project.id, user_id=request.session["user_id"], parent_id=None, body=body, path = path)
             try:
                 newCommit.save()
             except:
@@ -367,10 +368,9 @@ class ViewCommit(TemplateView):
                     return redirect("org/" + path + "/?err=Job not found")
                 parent_id = jobs[0].id
             job = jobs[0]
-            newCommit = Commit(org_id=org.id, project_id=project.id, user_id=request.session["user_id"], parent_id=job.id, body=body)
+            newCommit = Commit(org_id=org.id, project_id=project.id, user_id=request.session["user_id"], parent_id=job.id, body=body, path=path)
             try:
                 newCommit.save()
             except:
                 return redirect("org/" + path + "/?err=Internal server error")
-
         return redirect("org/" + path)

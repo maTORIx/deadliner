@@ -11,11 +11,12 @@
     <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
-          <h6>Jobs   <div class="float-right">
+          <h6>Todo Jobs   <div class="float-right">
             <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#exampleModalLong">New</button></div></h6>
         </div>
         <div class="card-block">
         {% for job in jobs %}
+          {% if not job.completed %}
           <div class="card">
             <div class="card-header">
               <a href="/org/{{org.name}}/{{project.title}}/{{job_url}}/{{job.title}}"><h6 class=card-title>{{job.title}} </h6></a>
@@ -25,6 +26,7 @@
               <div class="card-text">{{job.description}}</div>
             </div>
           </div>
+          {% endif %}
         {% endfor %}
         </div>
       </div>
@@ -73,8 +75,8 @@
             <textarea type="text" name="description" maxlength=255"" class="form-control" id="description" placeholder="Enter description" required></textarea>
           </div>
           <div class="form-group">
-            <label for="deadline">Deadline</label>
-            <input type="datetime-local" name="deadline" class="form-control" id="deadline" placeholder="Enter project name" required>
+            <label for="deadline">Deadline (Until : {{ job_deadline }})</label>
+            <input type="date" name="deadline" max="{{job_deadline}}" class="form-control" id="deadline" placeholder="Enter project name" required>
           </div>
           <div class="form-froup">
             <button type="submit" class="btn btn-primary btn-block">Create new Job</button>
