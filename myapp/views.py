@@ -15,10 +15,11 @@ from django.db.utils import IntegrityError
 class Home(TemplateView):
     """home page"""
     template_name = "home.html"
+
     def get(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
             return redirect("/login")
-        return super(Home,self).get(request, **kwargs)
+        return super(Home, self).get(request, **kwargs)
 
     def get_context_data(self, **kwargs):
         user = User.objects.get(id=self.request.session["user_id"])
@@ -29,6 +30,7 @@ class Home(TemplateView):
         context["orgs"] = orgs
         context["commits"] = commits
         return context
+
 
 class Login(TemplateView):
     template_name = "login.html"
@@ -43,7 +45,7 @@ class Login(TemplateView):
         password_low = request.POST.get("password").encode("utf-8")
         print(password_low)
         email = request.POST.get("email")
-        users = User.objects.filter(email = email)
+        users = User.objects.filter(email=email)
         if not len(users):
             return redirect("/login", err="E-mail or password is wrong")
         user = users[0]
@@ -99,10 +101,12 @@ class Signup(TemplateView):
             return redirect("/login/?err=Invalid form data")
         return redirect("/login")
 
+
 def logout(request):
     resp = redirect("/login")
     resp.delete_cookie("user_session")
     return resp
+
 
 class OrgForm(TemplateView):
     template_name = "orgform.html"
@@ -110,7 +114,7 @@ class OrgForm(TemplateView):
     def get(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
             return redirect("/login")
-        return super(OrgForm,self).get(request, **kwargs)
+        return super(OrgForm, self).get(request, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(OrgForm, self).get_context_data(**kwargs)
@@ -129,7 +133,9 @@ class OrgForm(TemplateView):
         user = User.objects.get(id=request.session["user_id"])
         if len(Organization.objects.filter(name=name)):
             return redirect('/org/?err=This organization name already exists')
-        newOrg = Organization(name=name, author=user.id, color=secrets.token_hex(3), link_img=img, link_homepage=homepage)
+        newOrg = Organization(name=name, author=user.id,
+                              color="#" + secrets.token_hex(3),
+                              link_img=img, link_homepage=homepage)
         try:
             newOrg.save()
         except:
@@ -138,8 +144,10 @@ class OrgForm(TemplateView):
         newMember.save()
         return redirect("/")
 
+
 class ViewOrg(TemplateView):
     template_name = "organization.html"
+
     def get(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
             return redirect("/login")
@@ -147,8 +155,8 @@ class ViewOrg(TemplateView):
         org = Organization.objects.filter(name=self.kwargs["org"])
         if not(len(org)):
             return redirect("/")
-        return super(ViewOrg,self).get(request, **kwargs)
-    
+        return super(ViewOrg, self).get(request, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(ViewOrg, self).get_context_data(**kwargs)
 
@@ -162,7 +170,7 @@ class ViewOrg(TemplateView):
         context["commits"] = org.getCommits()
         context["deadlines"] = org.getDeadlines()
         return context
-    
+
     def post(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
             return redirect("/login")
@@ -173,14 +181,42 @@ class ViewOrg(TemplateView):
         title = self.request.POST.get("name")
         description = self.request.POST.get("description")
         date_deadline = self.request.POST.get("deadline")
-        newProject = Project(title=title, description=description, date_deadline=date_deadline, org_id=org.id, completed=False)
+        newProject = Project(title=title, description=description,
+                             date_deadline=date_deadline, org_id=org.id,
+                             completed=False)
         try:
             newProject.save()
         except IntegrityError:
-            return redirect("/org/" + self.kwargs["org"] + "/?err=project name already exists")
-        except :
-            return redirect("/org/" + self.kwargs["org"] + "/?err=Invalid form data")
+            return redirect("/org/"
+                            + self.kwargs["org"]
+                            + "/?err=project name already exists")
+        except:
+            return redirect("/org/"
+                            + self.kwargs["org"]
+                            + "/?err=Invalid form data")
         return redirect("/org/" + self.kwargs["org"] + "/" + title)
+
+    def put(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not(len(orgs)):
+            return redirect("/")
+        org = orgs[0]
+        description = self.request.PUT.get("description")
+        homepage = self.request.PUT.get("homepage")
+        img_link = self.request.PUT.get("img")
+        color = self.request.PUT.get("color")
+        org.description = description
+        org.link_homepage = homepage
+        org.link_img = img_link
+        org.color = color
+        try:
+            org.save()
+        except:
+            return redirect("/org/" + org.name + "/?err=Invalid form data")
+        return redirect("/org/" + org.name)
+
 
 class ViewProject(TemplateView):
     template_name = "project.html"
@@ -188,12 +224,16 @@ class ViewProject(TemplateView):
     def get(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
             return redirect("/login")
-        org = Organization.objects.filter(name=self.kwargs["org"])
-        project = Project.objects.filter(title=self.kwargs["proj"])
-        if not(len(org)) or not(len(project)):
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not(len(orgs)):
             return redirect("/")
-        return super(ViewProject,self).get(request, *args, **kwargs)
-    
+        org = orgs[0]
+        projects = Project.objects.filter(title=self.kwargs["proj"],
+                                          org_id=org.id)
+        if not(len(projects)):
+            return redirect("/")
+        return super(ViewProject, self).get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(ViewProject, self).get_context_data(**kwargs)
 
@@ -206,12 +246,14 @@ class ViewProject(TemplateView):
         context["message"] = message
         context["org"] = org
         context["project"] = project
+        context["ready"] = project.isReady()
         context["jobs"] = project.getChildlen()
         context["commits"] = project.getCommits()
         context["deadlines"] = project.getDeadlines()
-        context["project_deadline"] = project.date_deadline.strftime("%Y-%m-%d")
+        context["project_deadline"] = project.date_deadline.strftime(
+            "%Y-%m-%d")
         return context
-    
+
     def post(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
             return redirect("/login")
@@ -224,15 +266,46 @@ class ViewProject(TemplateView):
         title = self.request.POST.get("name")
         description = self.request.POST.get("description")
         date_deadline = self.request.POST.get("deadline")
-        newJob = Job(title=title, description=description, date_deadline=date_deadline, project_id=project.id, parent_id=None, completed=False)
+        newJob = Job(title=title, description=description, date_deadline=date_deadline,
+                     project_id=project.id, parent_id=None, completed=False)
         try:
             newJob.save()
         except IntegrityError:
-            return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] +"/?err=project name already exists")
-        except :
-            return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + "/?err=Invalid form data")
+            return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + "/?err=project name already exists")
+        except:
+            return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + "/?err=Invalid form data")
         return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"])
-    
+
+    def put(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not(len(orgs)):
+            return redirect("/")
+        org = orgs[0]
+        projects = Project.objects.filter(
+            title=self.kwargs["proj"], org_id=org.id)
+        if not(len(projects)):
+            return redirect("/")
+        project = projects[0]
+
+        description = request.PUT.get("description")
+        deadline = request.PUT.get("deadline")
+        completed = 0
+        if not not request.PUT.get("completed"):
+            completed = 1
+        print(completed)
+        project.description = description
+        project.date_deadline = deadline
+        project.completed = completed
+        try:
+            project.save()
+        except:
+            return redirect("/org/" + org.name + "/" + project.title + "/?err=Invalid form data")
+
+        return redirect("/org/" + org.name + "/" + project.title)
+
+
 class ViewJob(TemplateView):
     template_name = "job.html"
 
@@ -249,13 +322,14 @@ class ViewJob(TemplateView):
         jobs = None
         for data in self.kwargs["job"].split("/"):
             print(parent_id, project.id, )
-            jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id,title=data)
+            jobs = Job.objects.filter(
+                parent_id=parent_id, project_id=project.id, title=data)
             if not(len(jobs)):
                 return redirect("/")
             parent_id = jobs[0].id
         job = jobs[0]
-        return super(ViewJob,self).get(request, *args, **kwargs)
-    
+        return super(ViewJob, self).get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(ViewJob, self).get_context_data(**kwargs)
 
@@ -268,25 +342,33 @@ class ViewJob(TemplateView):
         parent_id = None
         jobs = None
         for data in self.kwargs["job"].split("/"):
-            jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id,title=data)
+            jobs = Job.objects.filter(
+                parent_id=parent_id, project_id=project.id, title=data)
             if not(len(jobs)):
                 return redirect("/")
             parent_id = jobs[0].id
         job = jobs[0]
+        if(job.parent_id):
+            parent = Job.objects.get(id=job.parent_id)
+        else:
+            parent = project
 
         message = self.request.GET.get("err")
         context["message"] = message
         context["org"] = org
         context["project"] = project
+        context["parent_deadline"] = parent.date_deadline.strftime("%Y-%m-%d")
         context["job"] = job
+        context["ready"] = job.isReady()
+        context["job_deadline"] = job.date_deadline.strftime(
+            "%Y-%m-%d")
         context["jobs"] = job.getChildlen()
         context["children"] = job.getChildlen()
         context["commits"] = job.getCommits()
         context["deadlines"] = job.getDeadlines()
         context["job_url"] = self.kwargs["job"]
-        context["job_deadline"] = job.date_deadline.strftime("%Y-%m-%d")
         return context
-    
+
     def post(self, request, *args, **kwargs):
         orgs = Organization.objects.filter(name=self.kwargs["org"])
         org = orgs[0]
@@ -297,7 +379,8 @@ class ViewJob(TemplateView):
         parent_id = None
         jobs = None
         for data in self.kwargs["job"].split("/"):
-            jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id,title=data)
+            jobs = Job.objects.filter(
+                parent_id=parent_id, project_id=project.id, title=data)
             if not(len(jobs)):
                 return redirect("/")
             parent_id = jobs[0].id
@@ -306,18 +389,72 @@ class ViewJob(TemplateView):
         title = self.request.POST.get("name")
         description = self.request.POST.get("description")
         date_deadline = self.request.POST.get("deadline")
-        newJob = Job(title=title, description=description, date_deadline=date_deadline, project_id=project.id, parent_id=job.id, completed=False)
+        newJob = Job(title=title, description=description, date_deadline=date_deadline,
+                     project_id=project.id, parent_id=job.id, completed=False)
         try:
             newJob.save()
         except IntegrityError:
-            return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + self.kwargs["job"] +"/?err=project name already exists")
-        except :
-            return redirect("/org/" + self.kwargs["org"] +  "/" + self.kwargs["proj"] + self.kwargs["job"] + "/?err=Invalid form data")
+            return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + self.kwargs["job"] + "/?err=project name already exists")
+        except:
+            return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + self.kwargs["job"] + "/?err=Invalid form data")
         return redirect("/org/" + self.kwargs["org"] + "/" + self.kwargs["proj"] + "/" + self.kwargs["job"])
+
+    def put(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not(len(orgs)):
+            return redirect("/")
+        org = orgs[0]
+        projects = Project.objects.filter(
+            title=self.kwargs["proj"], org_id=org.id)
+        if not(len(projects)):
+            return redirect("/")
+        project = projects[0]
+
+        # jobGetter
+        parent_id = None
+        jobs = None
+        for data in self.kwargs["job"].split("/"):
+            jobs = Job.objects.filter(
+                parent_id=parent_id, project_id=project.id, title=data)
+            if not(len(jobs)):
+                return redirect("/")
+            parent_id = jobs[0].id
+        job = jobs[0]
+
+        completed = 0
+        if not not request.PUT.get("completed"):
+            completed = 1
+        description = request.PUT.get("description")
+        deadline = request.PUT.get("deadline")
+        print(description, deadline)
+        job.description = description
+        job.date_deadline = deadline
+        job.completed = completed
+        try:
+            job.save()
+        except:
+            redirect("/org/"
+                     + org.name
+                     + "/" + project.title
+                     + self.kwargs["job"]
+                     + "/"
+                     + self.kwargs("job")
+                     + "/?err=Invalid form data")
+
+        return redirect("/org/"
+                        + org.name
+                        + "/"
+                        + project.title
+                        + "/"
+                        + self.kwargs["job"])
+
 
 class ViewCommit(TemplateView):
     def get(self, request, *args, **kwargs):
         return redirect("/")
+
     def post(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
             return redirect("/login")
@@ -331,7 +468,8 @@ class ViewCommit(TemplateView):
             if not(len(orgs)):
                 return redirect("org/" + path + "/?err=organization not found")
             org = orgs[0]
-            newCommit = Commit(org_id=org.id, project_id=None, user_id=request.session["user_id"], parent_id=None, body=body, path = path)
+            newCommit = Commit(org_id=org.id, project_id=None,
+                               user_id=request.session["user_id"], parent_id=None, body=body, path=path)
             try:
                 newCommit.save()
             except:
@@ -345,7 +483,8 @@ class ViewCommit(TemplateView):
             if not(len(projects)):
                 return redirect("org/" + path + "/?err=Project not found")
             project = projects[0]
-            newCommit = Commit(org_id=org.id, project_id=project.id, user_id=request.session["user_id"], parent_id=None, body=body, path = path)
+            newCommit = Commit(org_id=org.id, project_id=project.id,
+                               user_id=request.session["user_id"], parent_id=None, body=body, path=path)
             try:
                 newCommit.save()
             except:
@@ -363,12 +502,14 @@ class ViewCommit(TemplateView):
             parent_id = None
             jobs = None
             for data in path_ary[2:]:
-                jobs = Job.objects.filter(parent_id=parent_id, project_id=project.id,title=data)
+                jobs = Job.objects.filter(
+                    parent_id=parent_id, project_id=project.id, title=data)
                 if not(len(jobs)):
                     return redirect("org/" + path + "/?err=Job not found")
                 parent_id = jobs[0].id
             job = jobs[0]
-            newCommit = Commit(org_id=org.id, project_id=project.id, user_id=request.session["user_id"], parent_id=job.id, body=body, path=path)
+            newCommit = Commit(org_id=org.id, project_id=project.id,
+                               user_id=request.session["user_id"], parent_id=job.id, body=body, path=path)
             try:
                 newCommit.save()
             except:

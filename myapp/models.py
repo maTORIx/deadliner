@@ -47,6 +47,7 @@ class Organization(models.Model):
     color = models.CharField(max_length=255, unique=True, null=False)
     link_img = models.CharField(max_length=255)
     link_homepage = models.CharField(max_length=255)
+    description = models.TextField(null=True)
 
     def getUsers(self):
         users_id = Member.objects.filter(
@@ -99,9 +100,17 @@ class Project(models.Model):
         jobs = Job.objects.filter(project_id=self.id)
         deadlines = []
         for job in jobs:
-            deadlines.append({"path": job.getPath(), "deadline": job.date_deadline})
+            if not job.completed:
+                deadlines.append({"path": job.getPath(), "deadline": job.date_deadline})
         deadlines.append({"path": "/" + self.title, "deadline": self.date_deadline})
         return deadlines
+    
+    def isReady(self):
+        children = self.getChildlen()
+        for child in children:
+            if not child.completed:
+                return False
+        return True
 
 class Job(models.Model):
     title = models.CharField(max_length=255, null=False)
@@ -147,11 +156,20 @@ class Job(models.Model):
         jobs = self.getChildlen()
         deadlines = []
         for job in jobs:
-            tmp_deadlines = job.getDeadlines()
-            for deadline in tmp_deadlines:
-                deadlines.append(deadline)
-        deadlines.append({"deadline": self.date_deadline, "path": self.getPath()})
+            if not job.completed:
+                tmp_deadlines = job.getDeadlines()
+                for deadline in tmp_deadlines:
+                    deadlines.append(deadline)
+        if not self.completed:
+            deadlines.append({"deadline": self.date_deadline, "path": self.getPath()})
         return deadlines
+    
+    def isReady(self):
+        children = self.getChildlen()
+        for child in children:
+            if not child.completed:
+                return False
+        return True
 
 class Image(models.Model):
     user_id = models.IntegerField(null=False)

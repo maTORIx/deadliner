@@ -1,8 +1,9 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<nav class="navbar navbar-inverse" style="background-color: #{{org.color}}">
-  <div class="navbar-brand" style="color: #000000;"><a href="/org/{{org.name}}"><b>{{org.name}}</b></a>:/  /{{project.title}}</div>
+{% load method_override %}
+<nav class="navbar navbar-inverse" style="background-color: {{org.color}}">
+  <div class="navbar-brand" style="color: #000000;">/<a href="/org/{{org.name}}"><b>{{org.name}}</b></a>/{{project.title}}</div>
 </nav>
 <div class="container">
   <div class="row">
@@ -10,7 +11,10 @@
       <div class="card">
         <div class="card-header">
           <h5>{{org.name}}</h5>
-          <div>homepage <a href="{{org.link_homepage}}">{{org.link_homepage}}</a><button type="button" class="btn btn-success btn-sm float-right" align="right">Settings</button></div>
+          <div>homepage <a href="{{org.link_homepage}}">{{org.link_homepage}}</a><button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#SettingModal">Settings</button></div>
+        </div>
+        <div class="card-block">
+          <div>{{org.description}}</div>
         </div>
       </div>
     </div>
@@ -19,20 +23,40 @@
     <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
-          <h6>Projects   <div class="float-right">
+          <h6>Todo Projects   <div class="float-right">
             <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#exampleModalLong">New</button></div></h6>
         </div>
         <div class="card-block">
         {% for project in projects %}
-          <div class="card">
-            <div class="card-header">
-              <a href="/org/{{org.name}}/{{project.title}}"><h6 class=card-title>{{project.title}} </h6></a>
-              <div>Until {{project.date_deadline.year}}/{{project.date_deadline.month}}/{{project.date_deadline.day}}</div>
+          {% if not project.completed %}
+            <div class="card">
+              <div class="card-header">
+                <a href="/org/{{org.name}}/{{project.title}}"><h6 class=card-title>{{project.title}} </h6></a>
+                <div>Until {{project.date_deadline.year}}/{{project.date_deadline.month}}/{{project.date_deadline.day}}</div>
+              </div>
+              <div class="card-block">
+                <div class="card-text">{{project.description}}</div>
+              </div>
             </div>
-            <div class="card-block">
-              <div class="card-text">{{project.description}}</div>
+          {% endif %}
+        {% endfor %}
+        </div>
+        <div class="card-header">
+          <h6>Done Projects
+        </div>
+        <div class="card-block">
+        {% for project in projects %}
+          {% if project.completed %}
+            <div class="card">
+              <div class="card-header">
+                <a href="/org/{{org.name}}/{{project.title}}"><h6 class=card-title>{{project.title}} </h6></a>
+                <div>Until {{project.date_deadline.year}}/{{project.date_deadline.month}}/{{project.date_deadline.day}}</div>
+              </div>
+              <div class="card-block">
+                <div class="card-text">{{project.description}}</div>
+              </div>
             </div>
-          </div>
+          {% endif %}
         {% endfor %}
         </div>
       </div>
@@ -99,7 +123,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="CommitModalTitle">New Job</h5>
+        <h5 class="modal-title" id="CommitModalTitle">New Commit</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -117,6 +141,46 @@
           </div>
           <div class="form-froup">
             <button type="submit" class="btn btn-primary btn-block">Send Commit</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="SettingModal" tabindex="-1" role="dialog" aria-labelledby="SettingModalTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="SettingModalTitle">Setting</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="">
+          {% csrf_token %}
+          {% method_override "PUT" %}
+          <div class="form-group">
+            <label>Project description</label>
+            <textarea type="text" name="description" maxlength=255"" class="form-control" required>{{org.description}}</textarea>
+          </div>
+          <div class="form-group">
+            <label>Image URL</label>
+            <input type="text" name="img" maxlength=255"" class="form-control" value="{{org.link_img}}" required>
+          </div>
+          <div class="form-group">
+            <label>Homepage URL</label>
+            <input type="text" name="homepage" maxlength=255"" class="form-control" value="{{org.link_homepage}}" required>
+          </div>
+          <div class="form-group">
+            <label>Color</label>
+            <input type="color" name="color" class="" value="{{org.color}}" id="body" required/>
+          </div>
+          <div class="form-froup">
+            <input type="submit" class="btn btn-primary btn-block" value="Send">
           </div>
         </form>
       </div>

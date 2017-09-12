@@ -1,12 +1,29 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<div class="table-responsive">
-  <nav class="navbar navbar-inverse bg-inverse">
-    <div class="navbar-brand mb-0"><a href="/org/{{org.name}}"><b>{{org.name}}</b></a>:/  /<a href="/org/{{org.name}}/{{project.title}}">{{project.title}}</a>/{{job_url}}</div>
-  </nav>
-</div>
+{% load method_override %}
+<nav class="navbar navbar-inverse" style="background-color: {{org.color}};">
+  <div class="navbar-brand" style="color: #000000;"><a href="/org/{{org.name}}"><b>{{org.name}}</b></a>/<a href="/org/{{org.name}}/{{project.title}}">{{project.title}}</a>/{{job_url}}</div>
+</nav>
+{% if job.completed %}
+<nav class="navbar navbar-inverse bg-primary">
+  <div>This job is already completed !!</div>
+</nav>
+{% endif %}
 <div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>{{job.title}}</h5>
+          <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}}<button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#SettingModal">Settings</button></div>
+        </div>
+        <div class="card-block">
+          {{job.description}}
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="row">
     <div class="col-lg-4">
       <div class="card">
@@ -20,7 +37,25 @@
           <div class="card">
             <div class="card-header">
               <a href="/org/{{org.name}}/{{project.title}}/{{job_url}}/{{job.title}}"><h6 class=card-title>{{job.title}} </h6></a>
-              <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}} {{job.date_deadline.hour}} o'clock</div>
+              <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}}</div>
+            </div>
+            <div class="card-block">
+              <div class="card-text">{{job.description}}</div>
+            </div>
+          </div>
+          {% endif %}
+        {% endfor %}
+        </div>
+        <div class="card-header">
+          <h6>Done Jobs</h6>
+        </div>
+        <div class="card-block">
+        {% for job in jobs %}
+          {% if job.completed %}
+          <div class="card">
+            <div class="card-header">
+              <a href="/org/{{org.name}}/{{project.title}}/{{job_url}}/{{job.title}}"><h6 class=card-title>{{job.title}} </h6></a>
+              <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}}</div>
             </div>
             <div class="card-block">
               <div class="card-text">{{job.description}}</div>
@@ -111,6 +146,49 @@
           </div>
           <div class="form-froup">
             <button type="submit" class="btn btn-primary btn-block">Send Commit</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="SettingModal" tabindex="-1" role="dialog" aria-labelledby="SettingModalTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="SettingModalTitle">Setting</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="">
+          {% csrf_token %}
+          {% method_override "PUT" %}
+          <div class="form-group">
+            <label>Job description</label>
+            <textarea type="text" name="description" maxlength=255"" class="form-control" required>{{job.description}}</textarea>
+          </div>
+          <div class="form-group">
+            <label>Deadline</label>
+            <input type="date" name="deadline" max="{{parent_deadline}}" class="form-control" value="{{job_deadline}}" id="body" required/>
+          </div>
+          <div class="form-group">
+            {% if not ready %}
+            <h6>Children did not completed. <br>If you want to complete it. We recommend completing the child jobs.</h6>
+            {% endif %}
+            <label>Completed</label>
+            {% if job.completed %}
+              <input type="checkbox" name="completed" class="form-control" value="True" checked="true" />
+            {% else %}
+              <input type="checkbox" name="completed" class="form-control" value="True"/>
+            {% endif %}
+          </div>
+          <div class="form-froup">
+            <input type="submit" class="btn btn-primary btn-block" value="Send">
           </div>
         </form>
       </div>
