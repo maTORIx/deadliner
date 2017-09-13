@@ -1,0 +1,77 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+{% load method_override %}
+<nav class="navbar navbar-inverse" style="background-color: {{org.color}}">
+  <div class="navbar-brand" style="color: #000000;">/<a href="/org/{{org.name}}"><b>{{org.name}}</b></a>/{{project.title}}</div>
+</nav>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-6 offset-lg-3">
+      <div class="card">
+        <div class="card-header">
+          <h6>Members</h6>
+        </div>
+        <div class="card-block">
+        {% for member in members %}
+          <div class="card">
+            <div class="card-header">
+              <h5>{{member.name}}</h5>
+              <div>{{member.email}}</div>
+            </div>
+          </div>
+        {% endfor %}
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+          <button type="button" class="btn btn-sm btn-primary float-right" data-toggle="modal" data-target="#MemberModal">New</button>
+          <h6>Member requests</h6>
+        </div>
+          <div class="card-block">
+          {% for request_user in requests %}
+            <div class="card">
+              <div class="card-header">
+                <form method="POST" action="/request/{{request_user.data.id}}">
+                  {% csrf_token %}
+                  {% method_override "DELETE" %}
+                  <input type="submit" class="btn btn-sm btn-danger float-right" value="Cancel">
+                </form>
+                <h5>{{request_user.user.name}}</h5>
+                <div>{{request_user.user.email}}</div>
+              </div>
+            </div>
+          {% endfor %}
+          </div>
+      </div>
+  </div>
+</div>
+<div class="modal fade" id="MemberModal" tabindex="-1" role="dialog" aria-labelledby="MemberModalTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="MemberModalTitle">New Job</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="/request/">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="url">User email</label>
+            <input type="email" name="email" maxlength=255"" class="form-control" id="body" value="" required/>
+          </div>
+          <input type="hidden" name="org" value="{{org.name}}">
+          <div class="form-froup">
+            <button type="submit" class="btn btn-primary btn-block">Send request</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

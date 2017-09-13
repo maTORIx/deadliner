@@ -5,12 +5,19 @@ import datetime
 from django.template.context_processors import csrf
 from django.views.generic.base import TemplateView
 from django.views.generic import FormView
+from django.http import Http404
 import hashlib
 import secrets
 import uuid
 from django.db.utils import IntegrityError
 # Create your views here.
 
+def handler404(request):
+    return render(request, "404.html", status=404)
+
+def isMember(org, user_id):
+    users = org.getUsers().filter(id=user_id)
+    return not not len(users)
 
 class Home(TemplateView):
     """home page"""
@@ -22,12 +29,21 @@ class Home(TemplateView):
         return super(Home, self).get(request, **kwargs)
 
     def get_context_data(self, **kwargs):
+        context = super(Home, self).get_context_data(**kwargs)
         user = User.objects.get(id=self.request.session["user_id"])
         orgs = user.getOrganization()
         commits = user.getCommits()
-        context = super(Home, self).get_context_data(**kwargs)
+        org_requests = user.getRequests()
+        data_requests = []
+        for data in org_requests:
+            data_requests.append({
+                "data": data,
+                "org": data.getOrg(),
+            })
+        print(data_requests)
         context["message"] = "message"
         context["orgs"] = orgs
+        context["org_requests"] = data_requests
         context["commits"] = commits
         return context
 
@@ -152,9 +168,9 @@ class ViewOrg(TemplateView):
         if not (request.session["user_id"]):
             return redirect("/login")
         print(self.kwargs["org"])
-        org = Organization.objects.filter(name=self.kwargs["org"])
-        if not(len(org)):
-            return redirect("/")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not len(orgs):
+            return render(request, "404.html", status=404)
         return super(ViewOrg, self).get(request, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -176,7 +192,7 @@ class ViewOrg(TemplateView):
             return redirect("/login")
         orgs = Organization.objects.filter(name=self.kwargs["org"])
         if not(len(orgs)):
-            return redirect("/")
+            return render(request, "404.html", status=404)
         org = orgs[0]
         title = self.request.POST.get("name")
         description = self.request.POST.get("description")
@@ -201,7 +217,7 @@ class ViewOrg(TemplateView):
             return redirect("/login")
         orgs = Organization.objects.filter(name=self.kwargs["org"])
         if not(len(orgs)):
-            return redirect("/")
+            return render(request, "404.html", status=404)
         org = orgs[0]
         description = self.request.PUT.get("description")
         homepage = self.request.PUT.get("homepage")
@@ -226,12 +242,12 @@ class ViewProject(TemplateView):
             return redirect("/login")
         orgs = Organization.objects.filter(name=self.kwargs["org"])
         if not(len(orgs)):
-            return redirect("/")
+            return render(request, "404.html", status=404)
         org = orgs[0]
         projects = Project.objects.filter(title=self.kwargs["proj"],
                                           org_id=org.id)
         if not(len(projects)):
-            return redirect("/")
+            return render(request, "404.html", status=404)
         return super(ViewProject, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -258,10 +274,12 @@ class ViewProject(TemplateView):
         if not (request.session["user_id"]):
             return redirect("/login")
         orgs = Organization.objects.filter(name=self.kwargs["org"])
-        projects = Project.objects.filter(title=self.kwargs["proj"])
-        if not(len(orgs)) or not(len(projects)):
-            return redirect("/")
+        if not len(orgs):
+            return render(request, "404.html", status=404)
         org = orgs[0]
+        projects = Project.objects.filter(title=self.kwargs["proj"], org_id=org.id)
+        if not len(orgs):
+            return render(request, "404.html", status=404)
         project = projects[0]
         title = self.request.POST.get("name")
         description = self.request.POST.get("description")
@@ -281,12 +299,12 @@ class ViewProject(TemplateView):
             return redirect("/login")
         orgs = Organization.objects.filter(name=self.kwargs["org"])
         if not(len(orgs)):
-            return redirect("/")
+            return render(request, "404.html", status=404)
         org = orgs[0]
         projects = Project.objects.filter(
             title=self.kwargs["proj"], org_id=org.id)
         if not(len(projects)):
-            return redirect("/")
+            return render(request, "404.html", status=404)
         project = projects[0]
 
         description = request.PUT.get("description")
@@ -304,7 +322,7 @@ class ViewProject(TemplateView):
             return redirect("/org/" + org.name + "/" + project.title + "/?err=Invalid form data")
 
         return redirect("/org/" + org.name + "/" + project.title)
-
+        
 
 class ViewJob(TemplateView):
     template_name = "job.html"
@@ -313,11 +331,16 @@ class ViewJob(TemplateView):
         if not (request.session["user_id"]):
             return redirect("/login")
         orgs = Organization.objects.filter(name=self.kwargs["org"])
-        projects = Project.objects.filter(title=self.kwargs["proj"])
-        if not(len(orgs)) or not(len(projects)):
-            return redirect("/")
-        # get job <- jobgetter <- 最強 <- 最上 <- もがみ <- 神?
+        if not(len(orgs)):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
+        projects = Project.objects.filter(
+            title=self.kwargs["proj"], org_id=org.id)
+        if not(len(projects)):
+            return render(request, "404.html", status=404)
         project = projects[0]
+
+        # get job <- jobgetter <- 最強 <- 最上 <- もがみ <- 神?
         parent_id = None
         jobs = None
         for data in self.kwargs["job"].split("/"):
@@ -325,7 +348,7 @@ class ViewJob(TemplateView):
             jobs = Job.objects.filter(
                 parent_id=parent_id, project_id=project.id, title=data)
             if not(len(jobs)):
-                return redirect("/")
+                return render(request, "404.html", status=404)
             parent_id = jobs[0].id
         job = jobs[0]
         return super(ViewJob, self).get(request, *args, **kwargs)
@@ -345,7 +368,7 @@ class ViewJob(TemplateView):
             jobs = Job.objects.filter(
                 parent_id=parent_id, project_id=project.id, title=data)
             if not(len(jobs)):
-                return redirect("/")
+                return render(request, "404.html", status=404)
             parent_id = jobs[0].id
         job = jobs[0]
         if(job.parent_id):
@@ -382,7 +405,7 @@ class ViewJob(TemplateView):
             jobs = Job.objects.filter(
                 parent_id=parent_id, project_id=project.id, title=data)
             if not(len(jobs)):
-                return redirect("/")
+                return render(request, "404.html", status=404)
             parent_id = jobs[0].id
         job = jobs[0]
 
@@ -404,12 +427,12 @@ class ViewJob(TemplateView):
             return redirect("/login")
         orgs = Organization.objects.filter(name=self.kwargs["org"])
         if not(len(orgs)):
-            return redirect("/")
+            return render(request, "404.html", status=404)
         org = orgs[0]
         projects = Project.objects.filter(
             title=self.kwargs["proj"], org_id=org.id)
         if not(len(projects)):
-            return redirect("/")
+            return render(request, "404.html", status=404)
         project = projects[0]
 
         # jobGetter
@@ -419,7 +442,7 @@ class ViewJob(TemplateView):
             jobs = Job.objects.filter(
                 parent_id=parent_id, project_id=project.id, title=data)
             if not(len(jobs)):
-                return redirect("/")
+                return render(request, "404.html", status=404)
             parent_id = jobs[0].id
         job = jobs[0]
 
@@ -453,7 +476,7 @@ class ViewJob(TemplateView):
 
 class ViewCommit(TemplateView):
     def get(self, request, *args, **kwargs):
-        return redirect("/")
+        return render(request, "404.html", status=404)
 
     def post(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
@@ -515,3 +538,178 @@ class ViewCommit(TemplateView):
             except:
                 return redirect("org/" + path + "/?err=Internal server error")
         return redirect("org/" + path)
+
+class ViewMember(TemplateView):
+    template_name = "memberForm.html"
+
+    def get(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        print(self.kwargs["org"])
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not len(orgs):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
+        users = org.getUsers().filter(id=request.session["user_id"])
+        if not len(users):
+            return redirect("/",status=404)
+        return super(ViewMember, self).get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(ViewMember, self).get_context_data(**kwargs)
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        print(orgs)
+        org = orgs[0]
+        user_requests = org.getRequests()
+        print(user_requests)
+        requests_data = []
+        for data in user_requests:
+            requests_data.append({
+                "data": data,
+                "user": data.getUser(),
+            })
+        print(org)
+        context["err"] = self.request.GET.get("err")
+        context["org"] = org
+        context["user"] = User.objects.get(id=self.request.session["user_id"])
+        context["members"] = org.getUsers()
+        context["requests"] = requests_data
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not len(orgs):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
+        users = User.objects.filter(id=self.request.POST.get("user_id"))
+        if not len(users):
+            return redirect("/member/"
+                            + self.kwargs["org"]
+                            + "/?err=User not found",
+                            status=500)
+        user = users[0]
+        user_requests = MemberRequest.objects.filter(user_id=user.id, organization_id=org.id)
+        if not len(user_requests):
+            return redirect("/member/"
+                            + self.kwargs["org"]
+                            + "/?err=Request not found",
+                            status=500)
+        user_request = user_requests[0]
+        newMember = Member(user_id=user.id, organization_id=org.id)
+        try:
+            newMember.save()
+        except:
+            return redirect("/member/"
+                            + self.kwargs["org"]
+                            + "/?err=Internal server error",
+                            status=500)
+        user_request.delete()
+        return redirect("/", status=200)
+    
+    def delete(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not len(orgs):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
+        users = User.objects.filter(id=self.request.POST.get("user_id"))
+        if not len(users):
+            return redirect("/member/"
+                            + self.kwargs["org"]
+                            + "/?err=User not found",
+                            status=500)
+        user = users[0]
+        members = Member.objects.filter(organization_id=org.id, user_id=user.id)
+        if not len(members):
+            return redirect("/member/"
+                            + self.kwargs["org"]
+                            + "/?err=Member not found",
+                            status=500)
+        member = members[0]
+        try:
+            member.delete()
+        except:
+            return redirect("/member/"
+                            + self.kwargs["org"]
+                            + "/?err=Internal server error",
+                            status=500)
+        return redirect("/member/"
+                        + org.name,
+                        status=200)
+
+class ViewRequest(TemplateView):
+    template_name = "memberRequest.html"
+
+    def get(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        if not (self.kwargs["id"]):
+            return redirect("/")
+        user_requests = MemberRequest.objects.filter(id=self.kwargs["id"])
+        if not len(user_requests):
+            return render(request, "404.html", {})
+        user_request = user_requests[0]
+        if not user_request.user_id is request.session["user_id"]:
+            return render(request, "401.html", {})
+        return super(ViewRequest, self).get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super(ViewRequest, self).get_context_data(**kwargs)
+        user_requests = MemberRequest.objects.filter(id=self.kwargs["id"])
+        user_request = user_requests[0]
+        orgs = Organization.objects.filter(id=user_request.organization_id)
+        org = orgs[0]
+        user = User.objects.get(id=user_request.user_id)
+        
+        context["err"] = self.request.GET.get("err")
+        context["org"] = org
+        context["user"] = user
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.request.POST.get("org"))
+        if not len(orgs):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
+        users = org.getUsers().filter(id=request.session["user_id"])
+        if not len(users):
+            return redirect("/",status=401)
+        
+        email = self.request.POST.get("email")
+        users = User.objects.filter(email=email)
+        if not len(users):
+            return redirect("/member/"
+                            + self.kwargs["org"]
+                            + "/?err=User not found",
+                            status=500)
+        user = users[0]
+        
+        newRequest = MemberRequest(organization_id=org.id, user_id=user.id)
+        try:
+            newRequest.save()
+        except:
+            return redirect("/member/"
+                            + org.name
+                            + "/?err=Internal server error",
+                            status=500)
+        return redirect("/member/"
+                            + org.name,
+                            status=200)
+
+    def delete(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        user_requests = MemberRequest.objects.filter(id=self.kwargs["id"])
+        if not len(user_requests):
+            return render(request, "404.html", {})
+        user_request = user_requests[0]
+        orgs = Organization.objects.filter(id=user_request.organization_id)
+        user_request.delete()
+        if not len(orgs):
+            return redirect("/")
+        return redirect("/member/" + orgs[0].name)

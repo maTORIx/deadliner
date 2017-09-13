@@ -20,6 +20,24 @@
         {% endfor %}
         </div>
       </div>
+      <div class="card">
+        <div class="card-header">
+          <h6>Requests</h6>
+        </div>
+        <div class="card-block">
+        {% for data in org_requests %}
+          <div class="card">
+            <div class="card-header">
+              <a href="/request/{{data.data.id}}" class="float-right"><button class="btn btn-success">join</button></a>
+              <h6>{{data.org.name}}</h6>
+            </div>
+            <div class="card-block">
+              <div>{{data.org.description}}</div>
+            </div>
+          </div>
+        {% endfor %}
+        </div>
+      </div>
     </div>
     <div class="col-lg-8">
       <div class="card">

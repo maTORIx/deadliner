@@ -13,7 +13,10 @@ class User(models.Model):
     def getOrganization(self):
         organizations_id = Member.objects.filter(
             user_id=self.id).values_list("organization_id", flat=True)
-        return Organization.objects.filter(id=organizations_id)
+        return Organization.objects.filter(id__in=organizations_id)
+
+    def getRequests(self):
+        return MemberRequest.objects.filter(user_id=self.id)
 
     def getUUID(self):
         beforeUUID = UUID.objects.filter(user_id=self.id)
@@ -22,7 +25,7 @@ class User(models.Model):
         newUUID = UUID(user_id=self.id)
         newUUID.save()
         return newUUID
-    
+
     def getCommits(self):
         return Commit.objects.filter(user_id=self.id)
 
@@ -52,7 +55,7 @@ class Organization(models.Model):
     def getUsers(self):
         users_id = Member.objects.filter(
             organization_id=self.id).values_list("user_id", flat=True)
-        return User.objects.filter(id=users_id)
+        return User.objects.filter(id__in=users_id)
 
     def getProjects(self):
         return Project.objects.filter(org_id=self.id)
@@ -62,9 +65,10 @@ class Organization(models.Model):
 
     def getDeadlines(self):
         projects = self.getProjects()
+
         def forMap(data):
             deadline = {
-                "path" : "/" + data.title,
+                "path": "/" + data.title,
                 "deadline": project.date_deadline
             }
             return data
@@ -73,10 +77,35 @@ class Organization(models.Model):
             deadlines.extend(project.getDeadlines())
         return deadlines
 
+    def getRequests(self):
+        return MemberRequest.objects.filter(organization_id=self.id)
 
 class Member(models.Model):
     organization_id = models.IntegerField(null=False)
     user_id = models.IntegerField(null=False)
+
+    class Meta:
+        unique_together = ("organization_id", "user_id")
+
+
+class MemberRequest(models.Model):
+    organization_id = models.IntegerField(null=False)
+    user_id = models.IntegerField(null=False)
+
+    class Meta:
+        unique_together = ("organization_id", "user_id")
+    
+    def getUser(self):
+        users = User.objects.filter(id=self.user_id)
+        if not len(users):
+            return
+        return users[0]
+    
+    def getOrg(self):
+        orgs = Organization.objects.filter(id=self.organization_id)
+        if not len(orgs):
+            return 
+        return orgs[0]
 
 
 class Project(models.Model):
@@ -101,16 +130,19 @@ class Project(models.Model):
         deadlines = []
         for job in jobs:
             if not job.completed:
-                deadlines.append({"path": job.getPath(), "deadline": job.date_deadline})
-        deadlines.append({"path": "/" + self.title, "deadline": self.date_deadline})
+                deadlines.append(
+                    {"path": job.getPath(), "deadline": job.date_deadline})
+        deadlines.append(
+            {"path": "/" + self.title, "deadline": self.date_deadline})
         return deadlines
-    
+
     def isReady(self):
         children = self.getChildlen()
         for child in children:
             if not child.completed:
                 return False
         return True
+
 
 class Job(models.Model):
     title = models.CharField(max_length=255, null=False)
@@ -148,10 +180,10 @@ class Job(models.Model):
                 commits.append(commit)
         commits.extend(Commit.objects.filter(parent_id=self.id))
         return commits
-    
+
     def getChildlen(self):
         return Job.objects.filter(project_id=self.project_id, parent_id=self.id)
-    
+
     def getDeadlines(self):
         jobs = self.getChildlen()
         deadlines = []
@@ -161,9 +193,10 @@ class Job(models.Model):
                 for deadline in tmp_deadlines:
                     deadlines.append(deadline)
         if not self.completed:
-            deadlines.append({"deadline": self.date_deadline, "path": self.getPath()})
+            deadlines.append(
+                {"deadline": self.date_deadline, "path": self.getPath()})
         return deadlines
-    
+
     def isReady(self):
         children = self.getChildlen()
         for child in children:
@@ -171,9 +204,11 @@ class Job(models.Model):
                 return False
         return True
 
+
 class Image(models.Model):
     user_id = models.IntegerField(null=False)
     image = models.ImageField(null=False)
+
 
 class Commit(models.Model):
     date_create = models.DateTimeField(default=datetime.now)

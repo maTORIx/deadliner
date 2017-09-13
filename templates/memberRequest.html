@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+{% load method_override %}
+<div class="card">
+  <h3 class="card-header">request from {{org.name}}</h3>
+  <div class="card-block">
+    <h4 class="card-title">{{org.name}} description</h4>
+    <p class="card-text">{{org.description}}</p>
+    <form action="/member/{{org.name}}" method="post" style="float:left;">
+      {% csrf_token %}
+      <input type="hidden" name="user_id" value="{{user.id}}">
+      {{user.id}}
+      <input type="submit" class="btn btn-success" value="Join to {{org.name}}">
+    </form>
+    <form action="" method="post" style="float:left;">
+      {% csrf_token %}
+      {% method_override "DELETE" %}
+      <input type="submit" class="btn btn-danger" value="Cancel">
+    </form>
+  </div>
+</div>
+{% endblock %}

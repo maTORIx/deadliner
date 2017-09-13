@@ -11,7 +11,11 @@
       <div class="card">
         <div class="card-header">
           <h5>{{org.name}}</h5>
-          <div>homepage <a href="{{org.link_homepage}}">{{org.link_homepage}}</a><button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#SettingModal">Settings</button></div>
+          <div>homepage
+            <a href="{{org.link_homepage}}">{{org.link_homepage}}</a>
+            <a href="/member/{{org.name}}"><button class="btn btn-default btn-sm float-right">Member</button></a>
+            <button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#SettingModal">Settings</button>
+          </div>
         </div>
         <div class="card-block">
           <div>{{org.description}}</div>
