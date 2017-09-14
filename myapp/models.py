@@ -80,6 +80,12 @@ class Organization(models.Model):
     def getRequests(self):
         return MemberRequest.objects.filter(organization_id=self.id)
 
+    def isMember(self, user_id):
+        users_id = Member.objects.filter(
+            organization_id=self.id).values_list("user_id", flat=True)
+        return user_id in users_id
+        
+
 class Member(models.Model):
     organization_id = models.IntegerField(null=False)
     user_id = models.IntegerField(null=False)
@@ -218,3 +224,48 @@ class Commit(models.Model):
     parent_id = models.IntegerField(null=True)
     body = models.CharField(max_length=255, null=False)
     path = models.CharField(max_length=255, null=False)
+
+class Task(models.Model):
+    job_id = models.IntegerField(null=False)
+    user_id = models.IntegerField(null=False)
+    completed = models.BooleanField(null=False, default=False)
+    date_create = models.DateTimeField(default=datetime.now)
+    date_update = models.DateTimeField(default=datetime.now)
+
+    def getJob(self):
+        jobs = Job.objects.filter(id=self.job_id)
+        if not len(jobs):
+            return
+        return jobs[0]
+    
+    def getExpense(self):
+        expenses = Expense.objects.filter(task_id=self.id)
+        if not len(jobs):
+            return
+        return jobs[0]
+
+    def getUser(self):
+        users = User.objects.filter(id=self.user_id)
+        if not len(users):
+            return
+        return users[0]
+
+class Expense(models.Model):
+    job_id = models.IntegerField(null=False)
+    task_id = models.IntegerField(null=False)
+    money = models.CharField(max_length=255, null=False)
+    reason = models.CharField(max_length=255, null=False)
+    subject = models.CharField(max_length=255, null=True)
+    date_create = models.DateTimeField(default=datetime.now)
+
+    def getUser(self):
+        users = User.objects.filter(id=self.user_id)
+        if not len(users):
+            return
+        return users[0]
+
+    def getJob(self):
+        jobs = Job.objects.filter(id=self.job_id)
+        if not len(jobs):
+            return
+        return jobs[0]

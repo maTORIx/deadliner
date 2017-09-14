@@ -7,6 +7,22 @@
 </nav>
 <div class="container">
   <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>{{org.name}}</h5>
+          <div>homepage
+            <a href="{{org.link_homepage}}">{{org.link_homepage}}</a>
+            <a href="/org/{{org.name}}"><button class="btn btn-default btn-sm float-right">Home</button></a>
+          </div>
+        </div>
+        <div class="card-block">
+          <div>{{org.description}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
     <div class="col-lg-6 offset-lg-3">
       <div class="card">
         <div class="card-header">
@@ -16,6 +32,12 @@
         {% for member in members %}
           <div class="card">
             <div class="card-header">
+              <form method="POST" action="">
+                {% csrf_token %}
+                {% method_override "DELETE" %}
+                <input type="hidden" name="user_id" value="{{member.id}}">
+                <input type="submit" class="btn btn-sm btn-danger float-right" value="Delete">
+              </form>
               <h5>{{member.name}}</h5>
               <div>{{member.email}}</div>
             </div>
