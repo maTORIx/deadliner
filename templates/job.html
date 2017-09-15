@@ -15,8 +15,10 @@
     <div class="col-lg-12">
       <div class="card">
         <div class="card-header">
+          <button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#SettingModal">Settings</button>
+          <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#ExpenseModal">New Expense</button>
           <h5>{{job.title}}</h5>
-          <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}}<button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#SettingModal">Settings</button></div>
+          <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}}</div>
         </div>
         <div class="card-block">
           {{job.description}}
@@ -233,6 +235,43 @@
           </div>
           <div class="form-froup">
             <input type="submit" class="btn btn-primary btn-block" value="Send">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="ExpenseModal" tabindex="-1" role="dialog" aria-labelledby="ExpenseModalTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ExpenseModalTitle">New Job</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="/expense/{{org.name}}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label>Reason</label>
+            <input type="text" name="reason" maxlength=255"" class="form-control" placeholder="Enter reason" required>
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" name="subject" maxlength=255"" class="form-control" placeholder="Enter subject" required/>
+          </div>
+          <div class="form-group">
+            <label>Money</label>
+            <input type="number" name="money" maxlength=255"" class="form-control" placeholder="Enter money" required/>
+          </div>
+          {{job.id}}
+          <input type="hidden" name="job_id" value="{{job.id}}">
+          <div class="form-froup">
+            <button type="submit" class="btn btn-primary btn-block">Send Commit</button>
           </div>
         </form>
       </div>

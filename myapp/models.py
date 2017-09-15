@@ -81,6 +81,17 @@ class Organization(models.Model):
         for project in projects:
             deadlines.extend(project.getDeadlines())
         return deadlines
+    
+    def getExpenses(self):
+        expenses =  Expense.objects.filter(org_id=self.id)
+        result = []
+        for expense in expenses:
+            result.append({
+                "data": expense,
+                "user": expense.getUser().name,
+                "path": expense.getJob().getPath()
+            })
+        return result
 
     def getRequests(self):
         return MemberRequest.objects.filter(organization_id=self.id)
@@ -299,7 +310,8 @@ class Task(models.Model):
 
 class Expense(models.Model):
     job_id = models.IntegerField(null=False)
-    task_id = models.IntegerField(null=False)
+    org_id = models.IntegerField(null=False)
+    user_id = models.IntegerField(null=False)
     money = models.CharField(max_length=255, null=False)
     reason = models.CharField(max_length=255, null=False)
     subject = models.CharField(max_length=255, null=True)

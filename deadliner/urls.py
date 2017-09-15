@@ -31,5 +31,6 @@ urlpatterns = [
     url(r'^commit/?', views.ViewCommit.as_view()),
     url(r'^member/(?P<org>[A-Za-z0-9\-\+\_]+)/?$', views.ViewMember.as_view()),
     url(r'^request/(?P<id>[0-9]*)/?$', views.ViewRequest.as_view()),
-    url(r'^task/?(?P<id>[0-9]*)/?$', views.ViewTask.as_view()),
+    url(r'^task/?(?P<org>[A-Za-z0-9\-\+\_\.]*)?/?$', views.ViewTask.as_view()),
+    url(r'^expense/?(?P<org>[A-Za-z0-9\-\+\_\.]*)?/?$', views.ViewExpense.as_view()),
 ]

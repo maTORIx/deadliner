@@ -847,10 +847,79 @@ class ViewTask(TemplateView):
         org = job.getProject().getOrg()
         # isMember
         if not org.isMember(request.session["user_id"]):
-            return render(request, "401.html", {}, status=401)
+            return render(request, "401.html", status=401)
         tasks = Task.objects.filter(job_id=job.id)
         if not len(tasks):
             return render(request, "500.html", {"data": "Task not found"}, status=500)
         task = tasks[0]
         task.delete()
+        return redirect("/")
+
+class ViewExpense(TemplateView):
+    template_name = "expense.html"
+
+    def get(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not len(orgs):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
+
+        #isMember
+        if not org.isMember(request.session["user_id"]):
+            return render(request, "401.html", status=401)
+        return super(ViewExpense, self).get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super(ViewExpense, self).get_context_data(**kwargs)
+        org = Organization.objects.filter(name=self.kwargs["org"])[0]
+        context["org"] = org
+        context["expenses"] = org.getExpenses()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not len(orgs):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
+
+        #isMember
+        if not org.isMember(request.session["user_id"]):
+            return render(request, "401.html", status=401)
+        
+        jobs = Job.objects.filter(id=self.request.POST.get("job_id"))
+        if not len(jobs):
+            return render(request, "404.html", status=404)
+        job = jobs[0]
+
+        money = request.POST.get("money")
+        reason = request.POST.get("reason")
+        subject = request.POST.get("subject")
+
+        newExpense = Expense(org_id=org.id, job_id=job.id,
+                             user_id=request.session["user_id"],
+                             money=money,
+                             reason=reason,
+                             subject=subject
+                             )
+        try:
+            newExpense.save()
+        except:
+            return render(request, "500.html", status=500)
+        return redirect("/expense/" + org.name)
+    
+    def delete(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        expense_id = self.request.DELETE.get("expense_id")
+        expenses = Expense.objects.filter(id=expense_id)
+        if not len(expenses):
+            return render(request, "404.html", status=404)
+        expense = expenses[0]
+        if not expense.user_id is request.session["user_id"]:
+            return render(request, "401.html", status=401)
+        expense.delete
         return redirect("/")

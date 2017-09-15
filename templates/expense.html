@@ -1,0 +1,61 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+{% load method_override %}
+<nav class="navbar navbar-inverse" style="background-color: {{org.color}}">
+  <div class="navbar-brand" style="color: #000000;">/<a href="/org/{{org.name}}"><b>{{org.name}}</b></a>/{{project.title}}</div>
+</nav>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>{{org.name}}</h5>
+          <div>homepage
+            <a href="{{org.link_homepage}}">{{org.link_homepage}}</a>
+            <a href="/org/{{org.name}}"><button class="btn btn-default btn-sm float-right">Home</button></a>
+          </div>
+        </div>
+        <div class="card-block">
+          <div>{{org.description}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h6>Expenses</h6>
+        </div>
+        <div class="class-block">
+          <table class="table table-hover table-responsive">
+            <thead>
+              <tr>
+                <th>subject</th>
+                <th>money</th>
+                <th>reason</th>
+                <th>user</th>
+                <th>date</th>
+                <th>path</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for expense in expenses %}
+              <tr>
+                <td>{{expense.data.subject}}</td>
+                <td>{{expense.data.money}}</td>
+                <td>{{expense.data.reason}}</td>
+                <td>{{expense.user}}</td>
+                <td>{{expense.data.date_create}}</td>
+                <td>{{expense.path}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
