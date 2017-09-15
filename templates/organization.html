@@ -14,9 +14,10 @@
           <div>homepage
             <a href="{{org.link_homepage}}">{{org.link_homepage}}</a>
             <div class="float-right">
-            <a href="/member/{{org.name}}"><button class="btn btn-default btn-sm float-right">Member</button></a>
-            <button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#SettingModal">Settings</button>
-            <a href="/expense/{{org.name}}" class="float-right"><button class="btn btn-primary btn-sm">Expense</button></a>
+              <a href="/member/{{org.name}}"><button class="btn btn-default btn-sm float-right">Member</button></a>
+              <button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#SettingModal">Settings</button>
+              <a href="/expense/{{org.name}}" class="float-right"><button class="btn btn-primary btn-sm">Expense</button></a>
+              <a href="/task/{{org.name}}"><button class="btn btn-sm float-right" style="background-color: #4ee4e4;">Task history</button></a>
             </div>
           </div>
         </div>
@@ -94,7 +95,7 @@
     <div class="col-lg-12">
       <div class="card">
         <div class="card-header">
-          <h6>Task</h6>
+          <h6>Recent Task</h6>
         </div>
         <table class="table table-responsive table-borderd" style="overflow-y: auto;max-height:500px;">
           <thead>
@@ -111,7 +112,7 @@
               <tr>
                 <td>{{task.job.title}}</td>
                 <td>{{task.data.completed}}</td>
-                <td>{{task.data.date_update.year}}/{{task.data.date_update.month}}/{{task.data.date_update.day}} {{task.data.date_update.hour}}:{{task.data.date_update.minute}}</td>
+                <td>{{task.data.date_update}}</td>
                 <td>{{task.user.name}}</td>
                 <td>{{task.path}}</td>
               </tr>

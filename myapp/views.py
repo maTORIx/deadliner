@@ -53,7 +53,7 @@ class Home(TemplateView):
         context["works"] = works
         context["orgs"] = orgs
         context["org_requests"] = data_requests
-        context["commits"] = commits
+        context["commits"] = sorted(commits, key=lambda commit: commit.date_create)
         return context
 
 
@@ -197,9 +197,9 @@ class ViewOrg(TemplateView):
         context["message"] = message
         context["org"] = org
         context["projects"] = org.getProjects()
-        context["commits"] = org.getCommits()
-        context["tasks"] = org.getTasks()
-        context["deadlines"] = org.getDeadlines()
+        context["commits"] = sorted(org.getCommits(), key=lambda data:data.date_create, reverse=True)
+        context["tasks"] = sorted(org.getRecentTasks(), key=lambda data: data["data"].date_update, reverse=True)
+        context["deadlines"] = sorted(org.getDeadlines(), key=lambda data: data["deadline"])
         return context
 
     def post(self, request, *args, **kwargs):
@@ -294,9 +294,9 @@ class ViewProject(TemplateView):
         context["project"] = project
         context["ready"] = project.isReady()
         context["jobs"] = project.getChildlen()
-        context["commits"] = project.getCommits()
-        context["tasks"] = project.getTasks()
-        context["deadlines"] = project.getDeadlines()
+        context["commits"] = sorted(project.getCommits(), key=lambda data:data.date_create, reverse=True)
+        context["tasks"] = sorted(project.getRecentTasks(), key=lambda data: data["data"].date_update, reverse=True)
+        context["deadlines"] = sorted(project.getDeadlines(), key=lambda data:data["deadline"])
         context["project_deadline"] = project.date_deadline.strftime(
             "%Y-%m-%d")
         return context
@@ -430,13 +430,13 @@ class ViewJob(TemplateView):
         context["job"] = job
         context["ready"] = job.isReady()
         context["working"] = job.isWorking()
-        context["tasks"] = job.getTasks()
         context["job_deadline"] = job.date_deadline.strftime(
             "%Y-%m-%d")
         context["jobs"] = job.getChildlen()
         context["children"] = job.getChildlen()
-        context["commits"] = job.getCommits()
-        context["deadlines"] = job.getDeadlines()
+        context["tasks"] = sorted(job.getRecentTasks(), key=lambda data: data["data"].date_update, reverse=True)
+        context["commits"] = sorted(job.getCommits(), key=lambda data:data.date_create, reverse=True)
+        context["deadlines"] = sorted(job.getDeadlines(), key=lambda data:data["deadline"])
         context["job_url"] = self.kwargs["job"]
         return context
 
@@ -632,8 +632,8 @@ class ViewMember(TemplateView):
         context["err"] = self.request.GET.get("err")
         context["org"] = org
         context["user"] = User.objects.get(id=self.request.session["user_id"])
-        context["members"] = org.getUsers()
-        context["requests"] = requests_data
+        context["members"] = sorted(org.getUsers(), key=lambda data: data.name)
+        context["requests"] = sorted(requests_data, key=lambda data: data["user"].name)
         return context
     
     def post(self, request, *args, **kwargs):
@@ -785,9 +785,27 @@ class ViewRequest(TemplateView):
         return redirect("/member/" + orgs[0].name)
 
 class ViewTask(TemplateView):
+    template_name = "task.html"
 
     def get(self, request, *args, **kwargs):
-        return render(request, "404.html", status=404)
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not len(orgs):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
+
+        #isMember
+        if not org.isMember(request.session["user_id"]):
+            return render(request, "401.html", status=401)
+        return super(ViewTask, self).get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super(ViewTask, self).get_context_data(**kwargs)
+        org = Organization.objects.filter(name=self.kwargs["org"])[0]
+        context["org"] = org
+        context["tasks"] = sorted(org.getTasks(), key=lambda data: data["data"].date_update, reverse=True)
+        return context
     
     def post(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
@@ -875,7 +893,7 @@ class ViewExpense(TemplateView):
         context = super(ViewExpense, self).get_context_data(**kwargs)
         org = Organization.objects.filter(name=self.kwargs["org"])[0]
         context["org"] = org
-        context["expenses"] = org.getExpenses()
+        context["expenses"] = sorted(org.getExpenses(), key=lambda data: data["data"].date_create)
         return context
 
     def post(self, request, *args, **kwargs):

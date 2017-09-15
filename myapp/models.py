@@ -1,6 +1,6 @@
 from django.db import models
 import uuid
-from datetime import datetime
+from datetime import datetime , timedelta
 # Create your models here.
 
 
@@ -107,6 +107,13 @@ class Organization(models.Model):
         for project in projects:
             tasks = tasks + project.getTasks()
         return tasks
+    
+    def getRecentTasks(self):
+        projects = self.getProjects()
+        tasks = []
+        for project in projects:
+            tasks = tasks + project.getRecentTasks()
+        return tasks
         
 
 class Member(models.Model):
@@ -183,6 +190,13 @@ class Project(models.Model):
         tasks = []
         for job in jobs:
             tasks = tasks + job.getTasks()
+        return tasks
+    
+    def getRecentTasks(self):
+        jobs = self.getChildlen()
+        tasks = []
+        for job in jobs:
+            tasks = tasks + job.getRecentTasks()
         return tasks
 
 class Job(models.Model):
@@ -265,6 +279,18 @@ class Job(models.Model):
             for task in tmp_tasks:
                 tasks.append(task)
         tmp_tasks = Task.objects.filter(job_id=self.id)
+        for task in tmp_tasks:
+            tasks.append({"data": task, "job": self, "path": self.getPath(), "user": task.getUser()})
+        return tasks
+    
+    def getRecentTasks(self):
+        tasks = []
+        children = self.getChildlen()
+        for child in children:
+            tmp_tasks = child.getTasks()
+            for task in tmp_tasks:
+                tasks.append(task)
+        tmp_tasks = Task.objects.filter(job_id=self.id, date_update__gt=(datetime.now() - timedelta(days = 1)).strftime("%Y-%m-%d"))
         for task in tmp_tasks:
             tasks.append({"data": task, "job": self, "path": self.getPath(), "user": task.getUser()})
         return tasks
