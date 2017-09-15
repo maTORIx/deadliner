@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from myapp.models import *
 from django.http import HttpResponse
-import datetime
+from datetime import datetime
 from django.template.context_processors import csrf
 from django.views.generic.base import TemplateView
 from django.views.generic import FormView
@@ -33,15 +33,24 @@ class Home(TemplateView):
         user = User.objects.get(id=self.request.session["user_id"])
         orgs = user.getOrganization()
         commits = user.getCommits()
-        org_requests = user.getRequests()
+
         data_requests = []
-        for data in org_requests:
+        for data in user.getRequests():
             data_requests.append({
                 "data": data,
                 "org": data.getOrg(),
             })
+
+        works = []
+        for work in user.getWorkingTask():
+            works.append({
+                "data": work,
+                "job": work.getJob()
+            })
+
         print(data_requests)
         context["message"] = "message"
+        context["works"] = works
         context["orgs"] = orgs
         context["org_requests"] = data_requests
         context["commits"] = commits
@@ -189,6 +198,7 @@ class ViewOrg(TemplateView):
         context["org"] = org
         context["projects"] = org.getProjects()
         context["commits"] = org.getCommits()
+        context["tasks"] = org.getTasks()
         context["deadlines"] = org.getDeadlines()
         return context
 
@@ -285,6 +295,7 @@ class ViewProject(TemplateView):
         context["ready"] = project.isReady()
         context["jobs"] = project.getChildlen()
         context["commits"] = project.getCommits()
+        context["tasks"] = project.getTasks()
         context["deadlines"] = project.getDeadlines()
         context["project_deadline"] = project.date_deadline.strftime(
             "%Y-%m-%d")
@@ -418,6 +429,8 @@ class ViewJob(TemplateView):
         context["parent_deadline"] = parent.date_deadline.strftime("%Y-%m-%d")
         context["job"] = job
         context["ready"] = job.isReady()
+        context["working"] = job.isWorking()
+        context["tasks"] = job.getTasks()
         context["job_deadline"] = job.date_deadline.strftime(
             "%Y-%m-%d")
         context["jobs"] = job.getChildlen()
@@ -770,3 +783,74 @@ class ViewRequest(TemplateView):
         if not len(orgs):
             return redirect("/")
         return redirect("/member/" + orgs[0].name)
+
+class ViewTask(TemplateView):
+
+    def get(self, request, *args, **kwargs):
+        return render(request, "404.html", status=404)
+    
+    def post(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        jobs = Job.objects.filter(id=self.request.POST.get("job_id"))
+        if not len(jobs):
+            return render(request, "404.html", status=404)
+        job = jobs[0]
+        org = job.getProject().getOrg()
+        # isMember
+        if not org.isMember(request.session["user_id"]):
+            return render(request, "401.html", {}, status=401)
+        if len(Task.objects.filter(job_id=job.id)):
+            return redirect("/?err=Task already exists")
+        newTask = Task(job_id=job.id, user_id=request.session["user_id"])
+        try:
+            newTask.save()
+        except:
+            return redirect("/?err=Internal Server Error", status=500)
+        return redirect("/")
+
+    def put(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        job_id = self.request.POST.get("job_id")
+        jobs = Job.objects.filter(id=job_id)
+        if not len(jobs):
+            return render(request, "500.html", {"data": "Job not found"}, status=500)
+        job = jobs[0]
+        org = job.getProject().getOrg()
+        # isMember
+        if not org.isMember(request.session["user_id"]):
+            return render(request, "401.html", {}, status=401)
+        tasks = Task.objects.filter(job_id=job.id)
+        if not len(tasks):
+            return render(request, "500.html", {"data": "Task not found"}, status=500)
+        task = tasks[0]
+        task.completed = True
+        task.date_update = datetime.now()
+        try:
+            task.save()
+        except:
+            return redirect("/")
+        job.completed = 1
+        job.save()
+        
+        return redirect("/")
+    
+    def delete(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        job_id = self.request.POST.get("job_id")
+        jobs = Job.objects.filter(id=job_id)
+        if not len(jobs):
+            return render(request, "500.html", {"data": "Job not found"}, status=500)
+        job = jobs[0]
+        org = job.getProject().getOrg()
+        # isMember
+        if not org.isMember(request.session["user_id"]):
+            return render(request, "401.html", {}, status=401)
+        tasks = Task.objects.filter(job_id=job.id)
+        if not len(tasks):
+            return render(request, "500.html", {"data": "Task not found"}, status=500)
+        task = tasks[0]
+        task.delete()
+        return redirect("/")

@@ -28,7 +28,12 @@ class User(models.Model):
 
     def getCommits(self):
         return Commit.objects.filter(user_id=self.id)
-
+    
+    def getWorkingTask(self):
+        return Task.objects.filter(user_id=self.id, completed=False)
+    
+    def getTask(self):
+        return Task.objects.filter(user_id=self.id)
 
 class UUID(models.Model):
     uuid = models.UUIDField(
@@ -84,6 +89,13 @@ class Organization(models.Model):
         users_id = Member.objects.filter(
             organization_id=self.id).values_list("user_id", flat=True)
         return user_id in users_id
+    
+    def getTasks(self):
+        projects = self.getProjects()
+        tasks = []
+        for project in projects:
+            tasks = tasks + project.getTasks()
+        return tasks
         
 
 class Member(models.Model):
@@ -125,6 +137,12 @@ class Project(models.Model):
     class Meta:
         unique_together = ("title", "org_id")
 
+    def getOrg(self):
+        orgs = Organization.objects.filter(id=self.org_id)
+        if not len(orgs):
+            return
+        return orgs[0]
+
     def getChildlen(self):
         return Job.objects.filter(project_id=self.id, parent_id=None)
 
@@ -148,7 +166,13 @@ class Project(models.Model):
             if not child.completed:
                 return False
         return True
-
+    
+    def getTasks(self):
+        jobs = self.getChildlen()
+        tasks = []
+        for job in jobs:
+            tasks = tasks + job.getTasks()
+        return tasks
 
 class Job(models.Model):
     title = models.CharField(max_length=255, null=False)
@@ -161,6 +185,18 @@ class Job(models.Model):
 
     class Meta:
         unique_together = ("title", "parent_id", "project_id")
+    
+    def getProject(self):
+        projects = Project.objects.filter(id=self.project_id)
+        if not len(projects):
+            return
+        return projects[0]
+    
+    def isWorking(self):
+        tasks = Task.objects.filter(job_id=self.id)
+        if not len(tasks):
+            return False
+        return True
 
     def getPath(self):
         result = [self.title]
@@ -206,10 +242,21 @@ class Job(models.Model):
     def isReady(self):
         children = self.getChildlen()
         for child in children:
-            if not child.completed:
+            if child.completed == 0:
                 return False
         return True
-
+    
+    def getTasks(self):
+        tasks = []
+        children = self.getChildlen()
+        for child in children:
+            tmp_tasks = child.getTasks()
+            for task in tmp_tasks:
+                tasks.append(task)
+        tmp_tasks = Task.objects.filter(job_id=self.id)
+        for task in tmp_tasks:
+            tasks.append({"data": task, "job": self, "path": self.getPath(), "user": task.getUser()})
+        return tasks
 
 class Image(models.Model):
     user_id = models.IntegerField(null=False)

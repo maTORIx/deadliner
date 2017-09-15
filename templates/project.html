@@ -90,6 +90,37 @@
       </div>
     </div>
   </div>
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header">
+          <h6>Task</h6>
+        </div>
+        <table class="table table-responsive table-borderd" style="overflow-y: auto;max-height:500px;">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Completed</th>
+              <th>Datetime</th>
+              <th>User</th>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr>
+                <td>{{task.job.title}}</td>
+                <td>{{task.data.completed}}</td>
+                <td>{{task.data.date_update.year}}/{{task.data.date_update.month}}/{{task.data.date_update.day}} {{task.data.date_update.hour}}:{{task.data.date_update.minute}}</td>
+                <td>{{task.user.name}}</td>
+                <td>{{task.path}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="modal fade" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
   <div class="modal-dialog" role="document">

@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+{% load method_override %}
 <div class="container">
   <div class="row">
     <div class="col-lg-4">
@@ -39,7 +40,38 @@
         </div>
       </div>
     </div>
-    <div class="col-lg-8">
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h6>My task</h6>
+        </div>
+        <div class="card-block">
+          {% for work in works %}
+            <div class="card">
+              <div class="card-header">
+                <form method="post" action="/task/{{work.data.id}}" class="float-right">
+                  {% csrf_token %}
+                  {% method_override "PUT" %}
+                  <input type="hidden" name="job_id" value="{{work.job.id}}">
+                  <input type="submit" class="btn btn-primary btn-sm" value="Finish">
+                </form>
+                <form method="post" action="/task/{{work.data.id}}" class="float-right">
+                  {% csrf_token %}
+                  {% method_override "DELETE" %}
+                  <input type="hidden" name="job_id" value="{{work.job.id}}">
+                  <input type="submit" class="btn btn-danger btn-sm" value="Cancel">
+                </form>
+                <h6><a href="/task/{{work.data.id}}">{{work.job.title}}</a></h6>
+              </div>
+              <div class="card-block">
+                <div>{{work.job.description}}</div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
           <h6>Recent My Commits</h6>
