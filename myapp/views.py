@@ -85,8 +85,8 @@ class Login(TemplateView):
             return redirect("/login", err="E-mail or password is wrong")
 
         # Cookie
-        now = datetime.datetime.now()
-        expires = datetime.datetime(now.year, (now.month + 3), now.day)
+        now = datetime.now()
+        expires = datetime(now.year, (now.month + 3), now.day)
         uuid = user.getUUID()
         resp = redirect("/")
         print("2")
@@ -183,7 +183,7 @@ class ViewOrg(TemplateView):
 
         # check authority
         if not (orgs[0].isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
         
         return super(ViewOrg, self).get(request, **kwargs)
 
@@ -212,7 +212,7 @@ class ViewOrg(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
 
         title = self.request.POST.get("name")
         description = self.request.POST.get("description")
@@ -242,7 +242,7 @@ class ViewOrg(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
         
         description = self.request.PUT.get("description")
         homepage = self.request.PUT.get("homepage")
@@ -272,7 +272,7 @@ class ViewProject(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
         
         projects = Project.objects.filter(title=self.kwargs["proj"],
                                           org_id=org.id)
@@ -311,7 +311,7 @@ class ViewProject(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
         
         projects = Project.objects.filter(title=self.kwargs["proj"], org_id=org.id)
         if not len(orgs):
@@ -340,7 +340,7 @@ class ViewProject(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
         
         projects = Project.objects.filter(
             title=self.kwargs["proj"], org_id=org.id)
@@ -378,7 +378,7 @@ class ViewJob(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
         
         projects = Project.objects.filter(
             title=self.kwargs["proj"], org_id=org.id)
@@ -446,7 +446,7 @@ class ViewJob(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
         
         projects = Project.objects.filter(title=self.kwargs["proj"])
         project = projects[0]
@@ -485,7 +485,7 @@ class ViewJob(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
         
         projects = Project.objects.filter(
             title=self.kwargs["proj"], org_id=org.id)
@@ -551,7 +551,7 @@ class ViewCommit(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
         
         if len(path_ary) == 1:
             newCommit = Commit(org_id=org.id, project_id=None,
@@ -608,7 +608,7 @@ class ViewMember(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
  
         users = org.getUsers().filter(id=request.session["user_id"])
         if not len(users):
@@ -678,7 +678,7 @@ class ViewMember(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
  
         users = User.objects.filter(id=self.request.POST.get("user_id"))
         if not len(users):
@@ -718,7 +718,7 @@ class ViewRequest(TemplateView):
             return render(request, "404.html", {})
         user_request = user_requests[0]
         if not user_request.user_id is request.session["user_id"]:
-            return render(request, "401.html", {})
+            return render(request, "404.html", status=404)
         return super(ViewRequest, self).get(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
@@ -744,11 +744,11 @@ class ViewRequest(TemplateView):
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
-            return render(request, "401.html")
+            return render(request, "404.html", status=404)
  
         users = org.getUsers().filter(id=request.session["user_id"])
         if not len(users):
-            return redirect("/",status=401)
+            return render(request, "404.html", status=404)
         
         email = self.request.POST.get("email")
         users = User.objects.filter(email=email)
@@ -797,7 +797,7 @@ class ViewTask(TemplateView):
 
         #isMember
         if not org.isMember(request.session["user_id"]):
-            return render(request, "401.html", status=401)
+            return render(request, "404.html", status=404)
         return super(ViewTask, self).get(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
@@ -817,7 +817,7 @@ class ViewTask(TemplateView):
         org = job.getProject().getOrg()
         # isMember
         if not org.isMember(request.session["user_id"]):
-            return render(request, "401.html", {}, status=401)
+            return render(request, "404.html", status=404)
         if len(Task.objects.filter(job_id=job.id)):
             return redirect("/?err=Task already exists")
         newTask = Task(job_id=job.id, user_id=request.session["user_id"])
@@ -838,7 +838,7 @@ class ViewTask(TemplateView):
         org = job.getProject().getOrg()
         # isMember
         if not org.isMember(request.session["user_id"]):
-            return render(request, "401.html", {}, status=401)
+            return render(request, "404.html", status=404)
         tasks = Task.objects.filter(job_id=job.id)
         if not len(tasks):
             return render(request, "500.html", {"data": "Task not found"}, status=500)
@@ -865,7 +865,7 @@ class ViewTask(TemplateView):
         org = job.getProject().getOrg()
         # isMember
         if not org.isMember(request.session["user_id"]):
-            return render(request, "401.html", status=401)
+            return render(request, "404.html", status=404)
         tasks = Task.objects.filter(job_id=job.id)
         if not len(tasks):
             return render(request, "500.html", {"data": "Task not found"}, status=500)
@@ -886,7 +886,7 @@ class ViewExpense(TemplateView):
 
         #isMember
         if not org.isMember(request.session["user_id"]):
-            return render(request, "401.html", status=401)
+            return render(request, "404.html", status=404)
         return super(ViewExpense, self).get(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
@@ -906,7 +906,7 @@ class ViewExpense(TemplateView):
 
         #isMember
         if not org.isMember(request.session["user_id"]):
-            return render(request, "401.html", status=401)
+            return render(request, "404.html", status=404)
         
         jobs = Job.objects.filter(id=self.request.POST.get("job_id"))
         if not len(jobs):
@@ -938,6 +938,6 @@ class ViewExpense(TemplateView):
             return render(request, "404.html", status=404)
         expense = expenses[0]
         if not expense.user_id is request.session["user_id"]:
-            return render(request, "401.html", status=401)
+            return render(request, "404.html", status=404)
         expense.delete
         return redirect("/")
