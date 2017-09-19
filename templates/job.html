@@ -69,6 +69,11 @@
           {% if job.completed %}
           <div class="card">
             <div class="card-header">
+              <form class="float-right" method="post" action="/org/{{org.name}}/{{project.title}}/{{job_url}}/{{job.title}}">
+                {% csrf_token %}
+                {% method_override "DELETE" %}
+                <input type="submit" class="btn btn-danger btn-sm" value="delete">
+              </form>
               <a href="/org/{{org.name}}/{{project.title}}/{{job_url}}/{{job.title}}"><h6 class=card-title>{{job.title}} </h6></a>
               <div>Until {{job.date_deadline.year}}/{{job.date_deadline.month}}/{{job.date_deadline.day}}</div>
             </div>
@@ -94,7 +99,7 @@
     <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
-          <h6>Commits
+          <h6>Comments
           <div class="float-right"><button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#CommitModal">New</button></div></h6>
         </div>
         {% for commit in commits %}

@@ -57,6 +57,11 @@
           {% if project.completed %}
             <div class="card">
               <div class="card-header">
+                <form class="float-right" method="post" action="/org/{{org.name}}/{{project.title}}">
+                  {% csrf_token %}
+                  {% method_override "DELETE" %}
+                  <input type="submit" class="btn btn-danger btn-sm" value="delete">
+                </form>
                 <a href="/org/{{org.name}}/{{project.title}}"><h6 class=card-title>{{project.title}} </h6></a>
                 <div>Until {{project.date_deadline.year}}/{{project.date_deadline.month}}/{{project.date_deadline.day}}</div>
               </div>
@@ -83,7 +88,7 @@
       <div class="card">
         <div class="card-header">
           <button type="button" class="btn btn-sm btn-primary float-right" data-toggle="modal" data-target="#CommitModal">New</button>
-          <h6>Commits</h6>
+          <h6>Comments</h6>
         </div>
         {% for commit in commits %}
           <div class="card-text">{{commit.date_create.year}}/{{commit.date_create.month}}/{{commit.date_create.day}} {{commit.path}} : {{commit.body}}</div>

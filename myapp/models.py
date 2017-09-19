@@ -34,6 +34,14 @@ class User(models.Model):
     
     def getTask(self):
         return Task.objects.filter(user_id=self.id)
+    
+    def getRecentTasks(self):
+        tasks = []
+        tmp_tasks = Task.objects.filter(user_id=self.id, date_update__gt=(datetime.now() - timedelta(days = 1)).strftime("%Y-%m-%d"))
+        for task in tmp_tasks:
+            job = task.getJob()
+            tasks.append({"data": task, "job": job, "path": job.getPath(), "user": task.getUser()})
+        return tasks
 
 class UUID(models.Model):
     uuid = models.UUIDField(

@@ -43,7 +43,7 @@
     <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
-          <h6>My task</h6>
+          <h6>Current task</h6>
         </div>
         <div class="card-block">
           {% for work in works %}
@@ -74,11 +74,30 @@
     <div class="col-lg-4">
       <div class="card">
         <div class="card-header">
-          <h6>Recent My Commits</h6>
+          <h6>Recent my task</h6>
         </div>
-        {% for commit in commits %}
-          <div class="card-text">{{commit.date}} {{commit.path}} : {{commit.body}}</div>
-        {% endfor %}
+        <table class="table table-responsive table-borderd" style="overflow-y: auto;max-height:500px;">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Completed</th>
+              <th>Datetime</th>
+              <th>User</th>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr>
+                <td>{{task.job.title}}</td>
+                <td>{{task.data.completed}}</td>
+                <td>{{task.data.date_update}}</td>
+                <td>{{task.user.name}}</td>
+                <td>{{task.path}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
     </div>

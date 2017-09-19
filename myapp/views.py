@@ -51,6 +51,7 @@ class Home(TemplateView):
         print(data_requests)
         context["message"] = "message"
         context["works"] = works
+        context["tasks"] = user.getRecentTasks()
         context["orgs"] = orgs
         context["org_requests"] = data_requests
         context["commits"] = sorted(commits, key=lambda commit: commit.date_create)
@@ -118,12 +119,15 @@ class Signup(TemplateView):
         sha512.update(salt)
         password_hashed = sha512.digest()
 
+        if len(User.objects.filter(email=email)):
+            return redirect("/signup/?err=User already exists")
+
         newUser = User(email=email, password=password_hashed,
                        salt=salt, name=name)
         try:
             newUser.save()
         except:
-            return redirect("/login/?err=Invalid form data")
+            return redirect("/signup/?err=Invalid form data")
         return redirect("/login")
 
 
@@ -285,7 +289,7 @@ class ViewProject(TemplateView):
 
         orgs = Organization.objects.filter(name=self.kwargs["org"])
         org = orgs[0]
-        projects = Project.objects.filter(title=self.kwargs["proj"])
+        projects = Project.objects.filter(title=self.kwargs["proj"], org_id=org.id)
         project = projects[0]
 
         message = self.request.GET.get("err")
@@ -363,7 +367,26 @@ class ViewProject(TemplateView):
             return redirect("/org/" + org.name + "/" + project.title + "/?err=Invalid form data")
 
         return redirect("/org/" + org.name + "/" + project.title)
-        
+    
+    def delete(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not(len(orgs)):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
+
+        # check authority
+        if not (org.isMember(request.session["user_id"])):
+            return render(request, "404.html", status=404)
+        projects = Project.objects.filter(
+            title=self.kwargs["proj"], org_id=org.id)
+        if not(len(projects)):
+            return render(request, "404.html", status=404)
+        project = projects[0]
+        project.delete()
+        return redirect("/org/" + org.name)
+
 
 class ViewJob(TemplateView):
     template_name = "job.html"
@@ -404,7 +427,7 @@ class ViewJob(TemplateView):
 
         orgs = Organization.objects.filter(name=self.kwargs["org"])
         org = orgs[0]
-        projects = Project.objects.filter(title=self.kwargs["proj"])
+        projects = Project.objects.filter(title=self.kwargs["proj"], org_id=org.id)
         project = projects[0]
 
         # jobGetter
@@ -530,7 +553,37 @@ class ViewJob(TemplateView):
                         + project.title
                         + "/"
                         + self.kwargs["job"])
+    def delete(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
+        orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not(len(orgs)):
+            return render(request, "404.html", status=404)
+        org = orgs[0]
 
+        # check authority
+        if not (org.isMember(request.session["user_id"])):
+            return render(request, "404.html", status=404)
+        
+        projects = Project.objects.filter(
+            title=self.kwargs["proj"], org_id=org.id)
+        if not(len(projects)):
+            return render(request, "404.html", status=404)
+        project = projects[0]
+
+        # jobGetter
+        parent_id = None
+        jobs = None
+        for data in self.kwargs["job"].split("/"):
+            jobs = Job.objects.filter(
+                parent_id=parent_id, project_id=project.id, title=data)
+            if not(len(jobs)):
+                return render(request, "404.html", status=404)
+            parent_id = jobs[0].id
+        job = jobs[0]
+        job_title = job.title
+        job.delete()
+        return redirect("/org/" + org.name + "/" + project.title + "/" + self.kwargs["job"][:-len(job_title) - 1])
 
 class ViewCommit(TemplateView):
     def get(self, request, *args, **kwargs):
@@ -939,5 +992,5 @@ class ViewExpense(TemplateView):
         expense = expenses[0]
         if not expense.user_id is request.session["user_id"]:
             return render(request, "404.html", status=404)
-        expense.delete
+        expense.delete()
         return redirect("/")

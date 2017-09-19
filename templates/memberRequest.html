@@ -10,7 +10,6 @@
     <form action="/member/{{org.name}}" method="post" style="float:left;">
       {% csrf_token %}
       <input type="hidden" name="user_id" value="{{user.id}}">
-      {{user.id}}
       <input type="submit" class="btn btn-success" value="Join to {{org.name}}">
     </form>
     <form action="" method="post" style="float:left;">
