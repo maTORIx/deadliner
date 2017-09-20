@@ -560,6 +560,7 @@ class ViewJob(TemplateView):
                         + project.title
                         + "/"
                         + self.kwargs["job"])
+                        
     def delete(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
             return redirect("/login")

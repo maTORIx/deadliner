@@ -78,9 +78,22 @@
         <div class="card-header">
           <h6>Deadlines</h6>
         </div>
-        {% for deadline in deadlines %}
-          <div class="card-text">{{deadline.deadline.year}}/{{deadline.deadline.month}}/{{deadline.deadline.day}} : {{org.name}}://{{deadline.path}}</div>
-        {% endfor %}
+        <table class="table table-inverse table-borderd" style="overflow-y: auto;max-height:500px;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for deadline in deadlines %}
+              <tr>
+                <td>{{deadline.deadline.year}}/{{deadline.deadline.month}}/{{deadline.deadline.day}}</td>
+                <td>{{org.name}}{{deadline.path}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
     <div class="col-lg-4">

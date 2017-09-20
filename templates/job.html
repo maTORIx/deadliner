@@ -32,8 +32,12 @@
         {% else %}
           {% if not ready %}
             <input type="submit" value="child jobs did not completed" class="btn btn-block " style="background-color: #4ee4e4" disabled>
-          {%else%}
-            <input type="submit" value="other user working or job already completed" class="btn btn-block " style="background-color: #4ee4e4" disabled>
+          {% else %}
+            {% if job.completed %}
+              <input type="submit" value="job already completed" class="btn btn-block " style="background-color: #4ee4e4" disabled>
+            {% else %}
+              <input type="submit" value="user working" class="btn btn-block " style="background-color: #4ee4e4" disabled>
+            {% endif %}
           {% endif %}
         {% endif %}
       </form>
@@ -91,9 +95,22 @@
         <div class="card-header">
           <h6>Deadlines</h6>
         </div>
-        {% for deadline in deadlines %}
-          <div class="card-text">{{deadline.deadline.year}}/{{deadline.deadline.month}}/{{deadline.deadline.day}} : {{org.name}}://{{deadline.path}}</div>
-        {% endfor %}
+        <table class="table table-responsive table-borderd" style="overflow-y: auto;max-height:500px;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for deadline in deadlines %}
+              <tr>
+                <td>{{deadline.deadline.year}}/{{deadline.deadline.month}}/{{deadline.deadline.day}}</td>
+                <td>{{org.name}}{{deadline.path}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
     <div class="col-lg-4">
@@ -114,7 +131,7 @@
         <div class="card-header">
           <h6>Recent Task</h6>
         </div>
-        <table class="table table-responsive table-borderd" style="overflow-y: auto;max-height:500px;">
+        <table class="table table-inverse table-borderd" style="overflow-y: auto;max-height:500px;">
           <thead>
             <tr>
               <th>Name</th>
