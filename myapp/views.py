@@ -63,8 +63,6 @@ class Login(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(Login, self).get_context_data(**kwargs)
-        message = self.request.GET.get("err")
-        context["message"] = message
         return context
 
     def post(self, request, *args, **kwargs):
@@ -73,7 +71,7 @@ class Login(TemplateView):
         email = request.POST.get("email")
         users = User.objects.filter(email=email)
         if not len(users):
-            return redirect("/login", err="E-mail or password is wrong")
+            return render(request, "login.html", {"message": "Email or password is wrong"})
         user = users[0]
         salt = user.salt
         sha512 = hashlib.sha512()
@@ -82,8 +80,7 @@ class Login(TemplateView):
         password_hashed = sha512.digest()
         print("1")
         if(not user.password == password_hashed):
-            print("err")
-            return redirect("/login", err="E-mail or password is wrong")
+            return render(request, "login.html", {"message": "Email or password is wrong"})
 
         # Cookie
         now = datetime.now()
@@ -104,8 +101,6 @@ class Signup(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(Signup, self).get_context_data(**kwargs)
-        message = self.request.GET.get("err")
-        context["message"] = message
         return context
 
     def post(self, request, *args, **kwargs):
@@ -119,19 +114,19 @@ class Signup(TemplateView):
         password_hashed = sha512.digest()
 
         if len(User.objects.filter(email=email)):
-            return redirect("/signup/?err=User already exists")
+            return render(request, "signup.html", {"message": "User already exists"}, status=403)
 
         newUser = User(email=email, password=password_hashed,
                        salt=salt, name=name)
         try:
             newUser.save()
         except:
-            return redirect("/signup/?err=Invalid form data")
+            return render(request, "500.html", {"err": "Invalid form data"}, status=500)
         return redirect("/login")
 
 
 def logout(request):
-    resp = redirect("/login")
+    resp = redirect("/")
     resp.delete_cookie("user_session")
     return resp
 
@@ -146,8 +141,6 @@ class OrgForm(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(OrgForm, self).get_context_data(**kwargs)
-        message = self.request.GET.get("err")
-        context["message"] = message
         return context
 
     def post(self, request, *args, **kwargs):
@@ -161,7 +154,7 @@ class OrgForm(TemplateView):
 
         user = User.objects.get(id=request.session["user_id"])
         if len(Organization.objects.filter(name=name)):
-            return redirect('/org/?err=This organization name already exists')
+            return render(request, self.template_name, {"message": "Organization already exists"}, status=403)
         newOrg = Organization(name=name, author=user.id,
                               color="#" + secrets.token_hex(3),
                               link_img=img, link_homepage=homepage,
@@ -169,7 +162,7 @@ class OrgForm(TemplateView):
         try:
             newOrg.save()
         except:
-            return redirect("/org/?err=Invalid form data")
+            return render(request, "500.html", {"err": "Invalid form data"}, status=500)
         newMember = Member(organization_id=newOrg.id, user_id=user.id)
         newMember.save()
         return redirect("/")
@@ -560,7 +553,7 @@ class ViewJob(TemplateView):
                         + project.title
                         + "/"
                         + self.kwargs["job"])
-                        
+
     def delete(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
             return redirect("/login")
@@ -776,7 +769,7 @@ class ViewRequest(TemplateView):
             return redirect("/")
         user_requests = MemberRequest.objects.filter(id=self.kwargs["id"])
         if not len(user_requests):
-            return render(request, "404.html", {})
+            return render(request, "404.html", status=404)
         user_request = user_requests[0]
         if not user_request.user_id is request.session["user_id"]:
             return render(request, "404.html", status=404)

@@ -95,7 +95,7 @@
         <div class="card-header">
           <h6>Deadlines</h6>
         </div>
-        <table class="table table-responsive table-borderd" style="overflow-y: auto;max-height:500px;">
+        <table class="table table-inverse table-borderd" style="overflow-y: auto;max-height:500px;">
           <thead>
             <tr>
               <th>Date</th>
@@ -131,7 +131,7 @@
         <div class="card-header">
           <h6>Recent Task</h6>
         </div>
-        <table class="table table-inverse table-borderd" style="overflow-y: auto;max-height:500px;">
+        <table class="table table-responsive table-borderd" style="overflow-y: auto;max-height:500px;">
           <thead>
             <tr>
               <th>Name</th>
@@ -196,7 +196,7 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="CommitModalTitle">New Job</h5>
+        <h5 class="modal-title" id="CommitModalTitle">New Comment</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -213,7 +213,7 @@
             <input type="text" name="url" maxlength=255"" class="form-control" id="body" value="{{org.name}}/{{project.title}}/{{job_url}}" required/>
           </div>
           <div class="form-froup">
-            <button type="submit" class="btn btn-primary btn-block">Send Commit</button>
+            <button type="submit" class="btn btn-primary btn-block">Send Comment</button>
           </div>
         </form>
       </div>
@@ -290,7 +290,6 @@
             <label>Money</label>
             <input type="text" name="money" maxlength=255"" class="form-control" placeholder="Enter money" required/>
           </div>
-          {{job.id}}
           <input type="hidden" name="job_id" value="{{job.id}}">
           <div class="form-froup">
             <button type="submit" class="btn btn-primary btn-block">Send Commit</button>

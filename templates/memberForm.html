@@ -80,6 +80,10 @@
       <div class="modal-body">
         <form method="post" action="/request/">
           {% csrf_token %}
+
+          {% if err %}
+            <h5>{{ err }}</h5>
+          {% endif %}
           <div class="form-group">
             <label for="url">User email</label>
             <input type="email" name="email" maxlength=255"" class="form-control" id="body" value="" required/>
