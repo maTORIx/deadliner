@@ -99,7 +99,6 @@ class Login(TemplateView):
                         httponly=True)
         return resp
 
-
 class Signup(TemplateView):
     template_name = "signup.html"
 
@@ -155,6 +154,7 @@ class OrgForm(TemplateView):
         if not (request.session["user_id"]):
             return redirect("/login")
         name = request.POST.get("name")
+        description = request.POST.get("description")
         img = request.POST.get("img")
         homepage = request.POST.get("homepage")
         print(name, img, homepage)
@@ -164,7 +164,8 @@ class OrgForm(TemplateView):
             return redirect('/org/?err=This organization name already exists')
         newOrg = Organization(name=name, author=user.id,
                               color="#" + secrets.token_hex(3),
-                              link_img=img, link_homepage=homepage)
+                              link_img=img, link_homepage=homepage,
+                              description=description)
         try:
             newOrg.save()
         except:
@@ -234,7 +235,7 @@ class ViewOrg(TemplateView):
             return redirect("/org/"
                             + self.kwargs["org"]
                             + "/?err=Invalid form data")
-        return redirect("/org/" + self.kwargs["org"] + "/" + title)
+        return redirect("/org/" + self.kwargs["org"])
 
     def put(self, request, *args, **kwargs):
         if not (request.session["user_id"]):
@@ -261,7 +262,6 @@ class ViewOrg(TemplateView):
         except:
             return redirect("/org/" + org.name + "/?err=Invalid form data")
         return redirect("/org/" + org.name)
-
 
 class ViewProject(TemplateView):
     template_name = "project.html"
@@ -384,7 +384,8 @@ class ViewProject(TemplateView):
         if not(len(projects)):
             return render(request, "404.html", status=404)
         project = projects[0]
-        project.delete()
+        project.deleted = True
+        project.save()
         return redirect("/org/" + org.name)
 
 
@@ -464,20 +465,27 @@ class ViewJob(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        if not (request.session["user_id"]):
+            return redirect("/login")
         orgs = Organization.objects.filter(name=self.kwargs["org"])
+        if not(len(orgs)):
+            return render(request, "404.html", status=404)
         org = orgs[0]
 
         # check authority
         if not (org.isMember(request.session["user_id"])):
             return render(request, "404.html", status=404)
         
-        projects = Project.objects.filter(title=self.kwargs["proj"])
+        projects = Project.objects.filter(
+            title=self.kwargs["proj"], org_id=org.id)
+        if not(len(projects)):
+            return render(request, "404.html", status=404)
         project = projects[0]
 
-        # jobGetter
         parent_id = None
         jobs = None
         for data in self.kwargs["job"].split("/"):
+            print(parent_id, project.id, )
             jobs = Job.objects.filter(
                 parent_id=parent_id, project_id=project.id, title=data)
             if not(len(jobs)):
@@ -532,7 +540,6 @@ class ViewJob(TemplateView):
             completed = 1
         description = request.PUT.get("description")
         deadline = request.PUT.get("deadline")
-        print(description, deadline)
         job.description = description
         job.date_deadline = deadline
         job.completed = completed
@@ -581,9 +588,9 @@ class ViewJob(TemplateView):
                 return render(request, "404.html", status=404)
             parent_id = jobs[0].id
         job = jobs[0]
-        job_title = job.title
-        job.delete()
-        return redirect("/org/" + org.name + "/" + project.title + "/" + self.kwargs["job"][:-len(job_title) - 1])
+        job.deleted = True
+        job.save()
+        return redirect("/org/" + org.name + "/" + project.title + "/" + self.kwargs["job"][:-len(job.title) - 1])
 
 class ViewCommit(TemplateView):
     def get(self, request, *args, **kwargs):

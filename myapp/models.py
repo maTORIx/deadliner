@@ -40,7 +40,10 @@ class User(models.Model):
         tmp_tasks = Task.objects.filter(user_id=self.id, date_update__gt=(datetime.now() - timedelta(days = 1)).strftime("%Y-%m-%d"))
         for task in tmp_tasks:
             job = task.getJob()
-            tasks.append({"data": task, "job": job, "path": job.getPath(), "user": task.getUser()})
+            tasks.append({"data": task,
+                          "job": job,
+                          "path": job.getPath(),
+                          "user": task.getUser()})
         return tasks
 
 class UUID(models.Model):
@@ -71,7 +74,7 @@ class Organization(models.Model):
         return User.objects.filter(id__in=users_id)
 
     def getProjects(self):
-        return Project.objects.filter(org_id=self.id)
+        return Project.objects.filter(org_id=self.id, deleted=False)
 
     def getCommits(self):
         return Commit.objects.filter(org_id=self.id)
@@ -159,6 +162,7 @@ class Project(models.Model):
     date_deadline = models.DateTimeField(null=False)
     org_id = models.IntegerField(null=False)
     completed = models.IntegerField(null=False)
+    deleted = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("title", "org_id")
@@ -170,7 +174,7 @@ class Project(models.Model):
         return orgs[0]
 
     def getChildlen(self):
-        return Job.objects.filter(project_id=self.id, parent_id=None)
+        return Job.objects.filter(project_id=self.id, parent_id=None, deleted=False)
 
     def getCommits(self):
         return Commit.objects.filter(org_id=self.org_id, project_id=self.id)
@@ -215,6 +219,7 @@ class Job(models.Model):
     project_id = models.IntegerField(null=False)
     parent_id = models.IntegerField(null=True)
     completed = models.IntegerField(null=False)
+    deleted = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("title", "parent_id", "project_id")
@@ -257,7 +262,7 @@ class Job(models.Model):
         return commits
 
     def getChildlen(self):
-        return Job.objects.filter(project_id=self.project_id, parent_id=self.id)
+        return Job.objects.filter(project_id=self.project_id, parent_id=self.id, deleted=False)
 
     def getDeadlines(self):
         jobs = self.getChildlen()
@@ -302,11 +307,6 @@ class Job(models.Model):
         for task in tmp_tasks:
             tasks.append({"data": task, "job": self, "path": self.getPath(), "user": task.getUser()})
         return tasks
-
-class Image(models.Model):
-    user_id = models.IntegerField(null=False)
-    image = models.ImageField(null=False)
-
 
 class Commit(models.Model):
     date_create = models.DateTimeField(default=datetime.now)

@@ -14,8 +14,8 @@
           <div>homepage
             <a href="{{org.link_homepage}}">{{org.link_homepage}}</a>
             <div class="float-right">
-              <a href="/member/{{org.name}}"><button class="btn btn-default btn-sm float-right">Member</button></a>
               <button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#SettingModal">Settings</button>
+              <a href="/member/{{org.name}}"><button class="btn btn-default btn-sm float-right">Member</button></a>
               <a href="/expense/{{org.name}}" class="float-right"><button class="btn btn-primary btn-sm">Expense</button></a>
               <a href="/task/{{org.name}}"><button class="btn btn-sm float-right" style="background-color: #4ee4e4;">Task history</button></a>
             </div>
@@ -238,13 +238,4 @@
 {% if message %}
   <h6>{{message}}</h6>
 {% endif %}
-{% endblock %}
-
-{% block script %}
-<script>
-  $('#myModal').on('shown.bs.modal', function () {
-    $('#myInput').focus()
-  })
-  console.log("hello")
-</script>
 {% endblock %}

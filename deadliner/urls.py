@@ -17,6 +17,9 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from myapp import views
+from imageUploader.views import Image
+from deadliner import settings
+import django
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -33,4 +36,5 @@ urlpatterns = [
     url(r'^request/(?P<id>[0-9]*)/?$', views.ViewRequest.as_view()),
     url(r'^task/?(?P<org>[A-Za-z0-9\-\+\_\.]*)?/?$', views.ViewTask.as_view()),
     url(r'^expense/?(?P<org>[A-Za-z0-9\-\+\_\.]*)?/?$', views.ViewExpense.as_view()),
+    url(r'^media/(?P<path>.*)/?$', "django.views.static.serve", {'document_root': settings.MEDIA_ROOT}),
 ]
