@@ -231,7 +231,7 @@ class Job(models.Model):
         return projects[0]
     
     def isWorking(self):
-        tasks = Task.objects.filter(job_id=self.id)
+        tasks = Task.objects.filter(job_id=self.id, completed=False)
         if not len(tasks):
             return False
         return True

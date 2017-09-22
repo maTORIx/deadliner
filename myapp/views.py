@@ -872,8 +872,8 @@ class ViewTask(TemplateView):
         # isMember
         if not org.isMember(request.session["user_id"]):
             return render(request, "404.html", status=404)
-        if len(Task.objects.filter(job_id=job.id)):
-            return redirect("/?err=Task already exists")
+        if len(Task.objects.filter(job_id=job.id, completed=False)):
+            return redirect("/?err=job already working")
         newTask = Task(job_id=job.id, user_id=request.session["user_id"])
         try:
             newTask.save()
@@ -893,7 +893,7 @@ class ViewTask(TemplateView):
         # isMember
         if not org.isMember(request.session["user_id"]):
             return render(request, "404.html", status=404)
-        tasks = Task.objects.filter(job_id=job.id)
+        tasks = Task.objects.filter(job_id=job.id, completed=False)
         if not len(tasks):
             return render(request, "500.html", {"data": "Task not found"}, status=500)
         task = tasks[0]
