@@ -9,7 +9,7 @@
 <table>
   <tr>
     <td>
-      <image src="http://matorixx.com/deadliner-images/deadliner-home.png">
+    　<image src="http://matorixx.com/deadliner-images/deadliner-job.png">
     </td>
     <td>
       <image src="http://matorixx.com/deadliner-images/deadliner-login.png">
@@ -20,7 +20,7 @@
       <image src="http://matorixx.com/deadliner-images/deadliner-expense-form.png">
     </td>
     <td>
-      <image src="http://matorixx.com/deadliner-images/deadliner-job.png">
+      <image src="http://matorixx.com/deadliner-images/deadliner-home.png">
     </td>
   </tr>
 </table>
