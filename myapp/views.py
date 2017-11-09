@@ -84,13 +84,10 @@ class Login(TemplateView):
 
         # Cookie
         now = datetime.now()
-        expires = datetime(now.year, (now.month + 3), now.day)
         uuid = user.getUUID()
         resp = redirect("/")
-        print("2")
         resp.set_cookie("user_session", uuid.uuid,
                         max_age=(1000 * 60 * 60 * 24 * 30 * 3),
-                        expires=expires, path='/',
                         domain=None,
                         secure=False,
                         httponly=True)
